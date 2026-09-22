@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>헤어케어 키워드 인텔리전스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F6F8; --surface:#FFFFFF; --sunk:#EDEFF3; --line:#E4E7EC; --line2:#EFF1F4;
+  --ink:#0F1115; --ink2:#565E6E; --ink3:#8B93A3;
+  --good:#12715C; --goodbg:#E4F3EE; --info:#2F58A6; --infobg:#E7EDF9;
+  --warn:#9A6414; --warnbg:#F8EEDC; --bad:#A5372F; --badbg:#F9E7E4;
+  --shadow:0 1px 2px rgba(16,20,28,.05), 0 6px 20px -8px rgba(16,20,28,.10);
+  --kr:'IBM Plex Sans KR',system-ui,sans-serif; --mono:'Space Grotesk',var(--kr);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0C0E12; --surface:#14171D; --sunk:#1B1F26; --line:#242932; --line2:#1E222A;
+  --ink:#EEF0F4; --ink2:#A4ABBA; --ink3:#6E7688;
+  --good:#54C6A5; --goodbg:#11302A; --info:#8AA8EE; --infobg:#182238;
+  --warn:#E0A94F; --warnbg:#332616; --bad:#E58479; --badbg:#35201D;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -10px rgba(0,0,0,.6);}}
+:root[data-theme="dark"]{
+  --bg:#0C0E12; --surface:#14171D; --sunk:#1B1F26; --line:#242932; --line2:#1E222A;
+  --ink:#EEF0F4; --ink2:#A4ABBA; --ink3:#6E7688;
+  --good:#54C6A5; --goodbg:#11302A; --info:#8AA8EE; --infobg:#182238;
+  --warn:#E0A94F; --warnbg:#332616; --bad:#E58479; --badbg:#35201D;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -10px rgba(0,0,0,.6);}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--kr);font-size:15px;
+  line-height:1.6;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.022em;line-height:1.25}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* header */
+header{padding:44px 0 26px}
+h1{font-size:27px;font-weight:600}
+.sub{margin:8px 0 0;color:var(--ink2);font-size:15px;max-width:58ch}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:16px}
+.chip{font-size:12px;color:var(--ink2);background:var(--surface);border:1px solid var(--line);
+  padding:4px 11px;border-radius:99px}
+
+/* sticky nav — 카테고리 선택 */
+.navbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav{display:flex;gap:8px;align-items:center;max-width:1160px;margin:0 auto;padding:11px 24px;
+  overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav .navlab{font-size:12px;color:var(--ink3);white-space:nowrap;margin-right:4px;
+  display:flex;align-items:center;gap:5px}
+nav .navlab svg{width:13px;height:13px;stroke:var(--ink3);fill:none;stroke-width:2}
+nav button{appearance:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  font-family:var(--kr);font-size:15px;font-weight:500;color:var(--ink2);
+  padding:9px 17px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;
+  transition:border-color .13s,color .13s,background .13s}
+nav button:hover{color:var(--ink);border-color:var(--ink3)}
+nav button[aria-selected="true"]{color:var(--surface);background:var(--ink);border-color:var(--ink);
+  font-weight:600}
+nav button:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+nav button i{font-style:normal;font-family:var(--mono);font-size:12px;font-weight:600;
+  color:var(--ink3);background:var(--sunk);border-radius:99px;padding:1px 7px}
+nav button[aria-selected="true"] i{color:var(--ink);background:var(--bg)}
+
+/* section */
+section{margin-top:44px;scroll-margin-top:60px}
+.sh{margin-bottom:18px}
+.sh h2{font-size:19px;display:flex;align-items:baseline;gap:9px}
+.sh h2 span{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--ink3)}
+.sh p{margin:5px 0 0;font-size:13.5px;color:var(--ink3)}
+.lead{font-size:14.5px;color:var(--ink2);line-height:1.68;margin:0 0 18px;max-width:78ch}
+.lead b{color:var(--ink);font-weight:600}
+.note{font-size:13.5px;color:var(--ink3);line-height:1.68;margin:18px 0 0;max-width:78ch}
+.note b{color:var(--ink2);font-weight:500}
+
+/* cards grid — 카테고리 비교 */
+.cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.cc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px 18px;
+  box-shadow:var(--shadow);cursor:pointer;text-align:left;font-family:var(--kr);color:var(--ink);
+  width:100%;display:block;transition:border-color .13s,transform .13s,box-shadow .13s}
+.cc:hover{border-color:var(--ink3);transform:translateY(-2px);
+  box-shadow:0 2px 4px rgba(16,20,28,.06),0 12px 28px -10px rgba(16,20,28,.18)}
+.cc:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.cc[aria-current="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink),var(--shadow)}
+.cc .go{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;
+  padding-top:13px;border-top:1px solid var(--line2);font-size:12.5px;font-weight:600;color:var(--info)}
+.cc .go .cur{font-size:11.5px;font-weight:500;color:var(--ink3)}
+.cc[aria-current="true"] .go{color:var(--ink)}
+.cc.lead-pick{border-color:color-mix(in srgb,var(--good) 40%,var(--line))}
+.cc-t{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.cc-t h4{font-size:16.5px}
+.cc dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:9px 12px;font-size:13px}
+.cc dt{color:var(--ink3)}
+.cc dd{margin:0;text-align:right;font-family:var(--mono);font-weight:600;font-size:14px}
+.cc dd.g{color:var(--good)} .cc dd.b{color:var(--bad)}
+.cc p{font-size:13px;line-height:1.62;color:var(--ink2);margin:14px 0 0;padding-top:13px;
+  border-top:1px solid var(--line2)}
+
+/* pill */
+.pill{font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:99px;white-space:nowrap;
+  letter-spacing:0}
+.pill.good{background:var(--goodbg);color:var(--good)}
+.pill.ok{background:var(--infobg);color:var(--info)}
+.pill.warn{background:var(--warnbg);color:var(--warn)}
+.pill.bad{background:var(--badbg);color:var(--bad)}
+.pill.none{background:var(--sunk);color:var(--ink3)}
+
+/* kpi */
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(124px,1fr));gap:10px}
+.kp{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px 15px}
+.kp dt{font-size:12px;color:var(--ink3);margin:0 0 5px}
+.kp dd{margin:0;font-family:var(--mono);font-size:22px;font-weight:600;line-height:1.05;
+  letter-spacing:-.02em}
+.kp dd small{font-family:var(--kr);font-size:12.5px;font-weight:400;color:var(--ink3);margin-left:2px}
+
+/* map */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);position:relative;padding:8px}
+svg.chart{display:block;width:100%;height:auto;border-radius:8px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:13px;font-size:12.5px;color:var(--ink2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:8px;height:8px;border-radius:50%}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);
+  padding:10px 13px;font-size:12.5px;line-height:1.55;max-width:250px;opacity:0;
+  transition:opacity .1s;z-index:9;border-radius:9px;box-shadow:0 10px 30px -8px rgba(0,0,0,.45)}
+.tip b{font-size:13.5px;display:block;margin-bottom:4px}
+.dot{cursor:pointer}
+
+/* axis cards */
+.ax{display:flex;flex-direction:column;gap:11px}
+.axc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  box-shadow:var(--shadow);display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+.axc.dim{opacity:.6;box-shadow:none}
+.axc-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:8px}
+.axc-h h4{font-size:16.5px}
+.axc-h .c{font-size:12px;color:var(--ink3);font-family:var(--mono)}
+.say{font-size:14px;line-height:1.66;margin:0 0 11px;max-width:58ch}
+.say b{font-weight:600}
+.ex{font-size:12.5px;color:var(--ink3);line-height:1.8;margin:0}
+.ex b{color:var(--ink2);font-weight:500;margin-right:4px}
+.axm{background:var(--sunk);border-radius:11px;padding:14px 16px}
+.bar{background:color-mix(in srgb,var(--ink) 8%,transparent);height:6px;border-radius:99px;
+  overflow:hidden;margin-bottom:5px}
+.bar i{display:block;height:100%;background:var(--info);border-radius:99px}
+.bar i.good{background:var(--good)} .bar i.bad{background:var(--bad)}
+.barlab{font-size:11.5px;color:var(--ink3);font-family:var(--mono);margin-bottom:13px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px 8px}
+.mgrid div{font-size:11.5px;color:var(--ink3);line-height:1.3}
+.mgrid b{display:block;font-family:var(--mono);font-size:16px;font-weight:600;color:var(--ink);
+  letter-spacing:-.02em}
+.mgrid b.g{color:var(--good)} .mgrid b.b{color:var(--bad)}
+
+/* split */
+.split{margin:14px 0 0;padding-top:13px;border-top:1px dashed var(--line)}
+.split-h{font-size:11.5px;color:var(--ink3);margin:0 0 8px}
+.sp{display:grid;grid-template-columns:110px 1fr auto;gap:12px;align-items:center;
+  padding:8px 11px;border-radius:9px;background:var(--sunk);margin-bottom:5px}
+.sp:last-child{margin-bottom:0}
+.sp-n{font-size:13px;font-weight:500}
+.sp-e{font-size:11.5px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-c{font-family:var(--mono);font-size:15px;font-weight:600;white-space:nowrap}
+.sp-c small{font-family:var(--kr);font-weight:400;font-size:11px;color:var(--ink3);margin-left:5px}
+.sp-c.g{color:var(--good)} .sp-c.b{color:var(--bad)}
+
+/* 05 경로 리스트 — 단일 표 */
+.pbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:11px}
+.plab{font-size:12px;color:var(--ink3);white-space:nowrap;margin-right:2px}
+.psegs{display:flex;gap:7px;flex-wrap:wrap}
+.psegs button{appearance:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  font-family:var(--kr);font-size:14.5px;font-weight:500;color:var(--ink2);padding:9px 16px;
+  cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;
+  transition:border-color .13s,color .13s,background .13s}
+.psegs button:hover{color:var(--ink);border-color:var(--ink3)}
+.psegs button[aria-pressed="true"]{color:var(--surface);background:var(--ink);border-color:var(--ink);
+  font-weight:600}
+.psegs button:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.psegs button i{font-style:normal;font-family:var(--mono);font-size:12px;font-weight:600;
+  color:var(--ink3);background:var(--sunk);border-radius:99px;padding:1px 7px}
+.psegs button[aria-pressed="true"] i{color:var(--ink);background:var(--bg)}
+.pgate{font-family:var(--mono);font-size:11.5px;color:var(--ink3);background:var(--sunk);
+  border-radius:7px;padding:6px 11px;margin-left:auto}
+.prole{font-size:13.2px;color:var(--ink2);margin:0 0 13px;line-height:1.62}
+.prole b{font-weight:600;color:var(--ink)}
+.pt{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow)}
+.pscroll{overflow-x:auto}
+.pt table{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px;min-width:780px}
+.pt th{text-align:right;font-weight:500;font-size:11.5px;color:var(--ink3);padding:10px 13px;
+  background:var(--surface);white-space:nowrap;border-bottom:1px solid var(--line)}
+.pt th:first-child,.pt td:first-child{text-align:left;padding-left:17px}
+.pt th:last-child,.pt td:last-child{padding-right:17px;text-align:left}
+.pt td{padding:9px 13px;border-bottom:1px solid var(--line2);text-align:right;
+  font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pt tbody tr:last-child td{border-bottom:0}
+.pt tbody tr:hover td{background:var(--sunk)}
+.pt .k{font-family:var(--kr);font-weight:500;font-size:14px;text-align:left}
+.pt .nd{font-family:var(--kr);font-size:12px;color:var(--ink3);text-align:left}
+.pt td.hi{font-weight:600;color:var(--ink)}
+.route{display:inline-flex;gap:3px;margin-left:7px;vertical-align:1px}
+.route b{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:4px}
+.route b.m{background:var(--infobg);color:var(--info)}
+.route b.o{background:var(--goodbg);color:var(--good)}
+.route b.a{background:var(--warnbg);color:var(--warn)}
+.pempty{padding:28px 17px;color:var(--ink3);font-size:13.5px;line-height:1.65}
+
+
+/* 걸러낸 것 — 구성 막대 · 규제 · 인증 */
+.stack{display:flex;height:30px;border-radius:9px;overflow:hidden;background:var(--sunk);margin:4px 0 10px}
+.stack i{display:block;height:100%;position:relative}
+.stack i:not(:last-child){box-shadow:inset -2px 0 0 var(--surface)}
+.skey{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink2)}
+.skey span{display:inline-flex;align-items:center;gap:6px}
+.skey i{width:9px;height:9px;border-radius:3px}
+.skey b{font-family:var(--mono);font-weight:600;color:var(--ink)}
+.L-ok{background:var(--good)} .L-lock{background:var(--warn)} .L-ban{background:#C9791B}
+.L-reg{background:var(--bad)} .L-brand{background:color-mix(in srgb,var(--ink3) 55%,transparent)} .L-typo{background:var(--info)}
+.mini-stack{display:flex;height:7px;border-radius:99px;overflow:hidden;background:var(--sunk);margin:2px 0 4px}
+.mini-stack i{display:block;height:100%}
+.cc .mslab{font-size:11.5px;color:var(--ink3);margin:0 0 12px;font-family:var(--mono)}
+.gate3{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;margin-top:16px}
+.gbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px 19px;box-shadow:var(--shadow)}
+.gbox h3{font-size:15.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gbox .role{font-size:12.5px;color:var(--ink3);margin:5px 0 12px;line-height:1.6}
+.gbox table{width:100%;border-collapse:collapse;font-size:13px}
+.gbox th{text-align:right;font-weight:500;font-size:11px;color:var(--ink3);padding:0 0 7px;border-bottom:1px solid var(--line)}
+.gbox th:first-child,.gbox td:first-child{text-align:left}
+.gbox td{text-align:right;padding:7px 0;border-bottom:1px solid var(--line2);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.gbox td:first-child{font-family:var(--kr);font-weight:500}
+.gbox tr:last-child td{border-bottom:0}
+.gbox td .t{font-family:var(--kr);font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:4px;
+  background:var(--badbg);color:var(--bad);margin-left:6px}
+.gbox td .ty{font-family:var(--kr);font-size:10.5px;color:var(--info);margin-left:5px}
+.gbox td.z{color:var(--bad);font-weight:600}
+.lockhead{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.lockhead div{background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:11.5px;color:var(--ink3)}
+.lockhead b{display:block;font-family:var(--mono);font-size:17px;font-weight:600;color:var(--ink);margin-top:2px}
+.lockhead b.w{color:var(--warn)}
+.chips2{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chips2 span{font-size:12.5px;background:var(--sunk);border-radius:7px;padding:4px 9px;color:var(--ink2)}
+.chips2 span b{font-family:var(--mono);font-weight:600;color:var(--ink);margin-left:4px;font-size:12px}
+.gnote{font-size:12.5px;color:var(--ink3);margin:12px 0 0;line-height:1.65}
+.gnote b{color:var(--ink2);font-weight:600}
+
+/* table */
+.tbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:13px}
+.search{position:relative;flex:1;min-width:200px;max-width:320px}
+.search input{width:100%;font-family:var(--kr);font-size:13.5px;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:8px 32px 8px 34px;outline:none;transition:border-color .13s,box-shadow .13s}
+.search input::placeholder{color:var(--ink3)}
+.search input:focus{border-color:var(--info);box-shadow:0 0 0 3px color-mix(in srgb,var(--info) 14%,transparent)}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;stroke:var(--ink3);fill:none;stroke-width:2;pointer-events:none}
+.search .clr{position:absolute;right:6px;top:50%;transform:translateY(-50%);appearance:none;
+  background:none;border:0;color:var(--ink3);cursor:pointer;font-size:16px;line-height:1;
+  padding:4px 6px;border-radius:6px;display:none}
+.search .clr:hover{background:var(--sunk);color:var(--ink)}
+.search.has .clr{display:block}
+.segs{display:flex;gap:3px;background:var(--sunk);padding:3px;border-radius:10px}
+.segs button{appearance:none;background:none;border:0;border-radius:7px;color:var(--ink3);
+  font-family:var(--kr);font-size:12.5px;font-weight:500;padding:6px 11px;cursor:pointer;
+  white-space:nowrap;transition:background .13s,color .13s}
+.segs button:hover{color:var(--ink2)}
+.segs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.segs button:focus-visible{outline:2px solid var(--info);outline-offset:1px}
+.cnt{font-size:12.5px;color:var(--ink3);font-family:var(--mono);margin-left:auto}
+.tw{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow)}
+.ts{overflow:auto;max-height:600px}
+table.kt{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px;min-width:800px}
+.kt th{text-align:right;font-weight:500;font-size:12px;color:var(--ink3);padding:11px 14px;
+  background:var(--surface);white-space:nowrap;cursor:pointer;position:sticky;top:0;z-index:2;
+  border-bottom:1px solid var(--line);user-select:none}
+.kt th:hover{color:var(--ink)}
+.kt th:first-child,.kt td:first-child{text-align:left;padding-left:18px}
+.kt th:last-child,.kt td:last-child{padding-right:18px}
+.kt th[data-a]::after{content:"";opacity:0}
+.kt th.up::after{content:" ↑";opacity:1;color:var(--ink)}
+.kt th.down::after{content:" ↓";opacity:1;color:var(--ink)}
+.kt td{padding:10px 14px;border-bottom:1px solid var(--line2);text-align:right;
+  font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kt tbody tr:last-child td{border-bottom:0}
+.kt tbody tr:hover td{background:var(--sunk)}
+.kt .kw{font-family:var(--kr);font-weight:500;font-size:14px}
+.kt .kw mark{background:color-mix(in srgb,var(--info) 22%,transparent);color:inherit;
+  border-radius:3px;padding:0 1px}
+.kt .tag{font-family:var(--kr);color:var(--ink3);font-size:12.5px;text-align:left}
+.qd{font-family:var(--mono);font-size:12.5px;font-weight:600;padding:2px 8px;border-radius:6px}
+.qB{background:var(--goodbg);color:var(--good)} .qA{background:var(--warnbg);color:var(--warn)}
+.qC{background:var(--infobg);color:var(--info)} .qD{background:var(--badbg);color:var(--bad)}
+.empty{padding:34px 18px;text-align:center;color:var(--ink3);font-size:13.5px}
+
+/* insight */
+.verdict{font-size:15.5px;font-weight:500;line-height:1.62;padding:16px 20px;border-radius:12px;
+  background:var(--goodbg);color:var(--good);margin-bottom:14px}
+.verdict.warn{background:var(--badbg);color:var(--bad)}
+.two-ins{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ic{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px 8px;
+  box-shadow:var(--shadow)}
+.ic h3{font-size:16px}
+.ic .role{font-size:12.5px;color:var(--ink3);margin:4px 0 14px}
+.ic ul{margin:0;padding:0;list-style:none}
+.ic li{padding:12px 0;border-bottom:1px solid var(--line2);font-size:13.8px;line-height:1.62}
+.ic li:last-child{border-bottom:0}
+.ic li em{display:block;font-style:normal;font-family:var(--mono);color:var(--ink3);
+  font-size:12px;margin-top:5px}
+
+/* caveat */
+details.cav{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);overflow:hidden}
+details.cav summary{padding:16px 20px;cursor:pointer;font-weight:600;font-size:15px;
+  list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px}
+details.cav summary::-webkit-details-marker{display:none}
+details.cav summary::after{content:"＋";color:var(--ink3);font-weight:400}
+details.cav[open] summary::after{content:"－"}
+details.cav summary:hover{background:var(--sunk)}
+.cavbody{padding:0 20px 18px}
+.cavbody ol{margin:0;padding-left:19px;font-size:13.5px;color:var(--ink2);line-height:1.72}
+.cavbody li{margin-bottom:10px} .cavbody li:last-child{margin-bottom:0}
+.cavbody b{color:var(--ink);font-weight:600}
+.formula{font-size:12.5px;color:var(--ink3);margin-top:15px;padding-top:13px;
+  border-top:1px solid var(--line2);line-height:1.7}
+footer{margin:44px 0 60px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:12.5px;color:var(--ink3);display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+
+@media (max-width:900px){
+  .wrap{padding:0 16px}
+  .cmp,.two-ins,.gate3{grid-template-columns:1fr}
+  .lockhead{grid-template-columns:1fr 1fr 1fr}
+  .pgate{margin-left:0;width:100%}
+  .axc{grid-template-columns:1fr;gap:16px}
+  .sp{grid-template-columns:1fr auto} .sp-e{display:none}
+  h1{font-size:23px}
+  nav{padding:9px 16px}
+  nav button{font-size:14px;padding:8px 13px}
+  .psegs button{font-size:13.5px;padding:8px 13px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>헤어케어 키워드 인텔리전스</h1>
+  <p class="sub">자체 브랜드가 지금 들어갈 수 있는 키워드만 남겨, 수요·공급·반응으로 빈자리를 찾습니다.</p>
+  <div class="chips">
+    <span class="chip">2026년 8월</span>
+    <span class="chip">샴푸 · 탈모케어 · 두피케어</span>
+    <span class="chip">자체 브랜드 · 탈모 기능성 인증 없음</span>
+    <span class="chip">네이버 · 아이템스카우트</span>
+  </div>
+</header>
+<main id="top"></main>
+</div>
+<div class="navbar"><nav id="tabs" role="tablist"><span class="navlab">
+  <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>카테고리</span></nav></div>
+<div class="wrap"><main id="view"></main>
+<footer>
+  <span>카테고리당 상위 500개 키워드 중 상품수 확보분 · 규제 판단은 참고용이며 법무·광고 심의 확인 필요</span>
+  <span class="n">경쟁강도 = 상품수 ÷ 총검색수</span>
+</footer>
+</div>
+<script>const DATA={"샴푸":{"rows":[{"kw":"샴푸","s":79300,"p":1842909,"ci":23.24,"mctr":0.74,"cpc":2700,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.25},{"kw":"염색샴푸","s":24970,"p":39837,"ci":1.6,"mctr":1.31,"cpc":1050,"q":"B","cl":"새치·염색","nd":["새치·염색"],"sc":5.48},{"kw":"새치염색샴푸","s":5750,"p":11463,"ci":1.99,"mctr":3.48,"cpc":1130,"q":"B","cl":"새치·염색","nd":["새치·염색"],"sc":7.16},{"kw":"드라이샴푸","s":9690,"p":23780,"ci":2.45,"mctr":1.79,"cpc":700,"q":"B","cl":"제형 다변화","nd":["노워시(드라이·물없는)"],"sc":6.44},{"kw":"보색샴푸","s":6150,"p":3136,"ci":0.51,"mctr":1.4,"cpc":600,"q":"B","cl":"새치·염색","nd":["새치·염색"],"sc":7.27},{"kw":"샴푸바","s":7120,"p":24998,"ci":3.51,"mctr":2.57,"cpc":1300,"q":"B","cl":"제형 다변화","nd":["고체(샴푸바·비누)"],"sc":6.6},{"kw":"블랙샴푸","s":3750,"p":65720,"ci":17.53,"mctr":0.0,"cpc":70,"q":"A","cl":"새치·염색","nd":["새치·염색"],"sc":3.78},{"kw":"비듬샴푸","s":8710,"p":68953,"ci":7.92,"mctr":2.11,"cpc":2530,"q":"A","cl":"비듬","nd":["비듬"],"sc":5.56},{"kw":"샴푸추천","s":25990,"p":1837345,"ci":70.69,"mctr":1.46,"cpc":2660,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.67},{"kw":"약산성샴푸","s":8620,"p":67198,"ci":7.8,"mctr":1.25,"cpc":2280,"q":"A","cl":"민감·저자극","nd":["민감·저자극"],"sc":4.79},{"kw":"청소년샴푸","s":5760,"p":10593,"ci":1.84,"mctr":3.21,"cpc":2180,"q":"B","cl":"대상 특화","nd":["청소년"],"sc":7.37},{"kw":"단백질샴푸","s":4590,"p":44467,"ci":9.69,"mctr":2.4,"cpc":1820,"q":"A","cl":"손상·영양","nd":["손상·영양"],"sc":5.59},{"kw":"어성초샴푸","s":2550,"p":6488,"ci":2.54,"mctr":2.5,"cpc":710,"q":"B","cl":"성분 컨셉","nd":["성분:어성초"],"sc":6.63},{"kw":"대용량샴푸","s":3110,"p":92469,"ci":29.73,"mctr":0.73,"cpc":1450,"q":"A","cl":"용도·상황","nd":["대용량"],"sc":3.46},{"kw":"새치샴푸","s":3200,"p":12388,"ci":3.87,"mctr":2.04,"cpc":980,"q":"B","cl":"새치·염색","nd":["새치·염색"],"sc":5.97},{"kw":"미용실샴푸","s":8080,"p":86984,"ci":10.77,"mctr":1.03,"cpc":1420,"q":"A","cl":"용도·상황","nd":["업소용"],"sc":4.51},{"kw":"지성샴푸","s":4440,"p":48378,"ci":10.9,"mctr":0.76,"cpc":2210,"q":"A","cl":"지성·피지","nd":["지성·피지"],"sc":4.32},{"kw":"수영샴푸","s":2740,"p":4471,"ci":1.63,"mctr":0.64,"cpc":1290,"q":"B","cl":"용도·상황","nd":["수영"],"sc":5.87},{"kw":"공주부양샴푸","s":1790,"p":2503,"ci":1.4,"mctr":0.79,"cpc":180,"q":"C","cl":"볼륨·힘없는모발","nd":["볼륨·힘없는모발"],"sc":5.87},{"kw":"다시마샴푸","s":2760,"p":2070,"ci":0.75,"mctr":2.75,"cpc":550,"q":"B","cl":"성분 컨셉","nd":["성분:다시마·해조"],"sc":8.0},{"kw":"염소제거샴푸","s":3330,"p":1063,"ci":0.32,"mctr":5.88,"cpc":870,"q":"B","cl":"용도·상황","nd":["수영"],"sc":8.76},{"kw":"쿨샴푸","s":2640,"p":34204,"ci":12.96,"mctr":2.17,"cpc":1990,"q":"A","cl":"두피열·쿨링","nd":["두피열·쿨링"],"sc":5.11},{"kw":"티트리샴푸","s":1770,"p":10753,"ci":6.08,"mctr":1.31,"cpc":750,"q":"D","cl":"성분 컨셉","nd":["성분:티트리"],"sc":4.59},{"kw":"천연샴푸","s":1820,"p":26820,"ci":14.74,"mctr":2.09,"cpc":1520,"q":"A","cl":"민감·저자극","nd":["민감·저자극"],"sc":4.75},{"kw":"공중부양샴푸","s":1210,"p":9697,"ci":8.01,"mctr":3.58,"cpc":270,"q":"D","cl":"볼륨·힘없는모발","nd":["볼륨·힘없는모발"],"sc":5.46},{"kw":"유기농샴푸","s":2430,"p":6026,"ci":2.48,"mctr":2.92,"cpc":930,"q":"B","cl":"민감·저자극","nd":["민감·저자극"],"sc":6.83},{"kw":"산성샴푸","s":3270,"p":8820,"ci":2.7,"mctr":0.3,"cpc":960,"q":"B","cl":"민감·저자극","nd":["민감·저자극"],"sc":5.59},{"kw":"지성두피샴푸","s":2570,"p":37111,"ci":14.44,"mctr":1.35,"cpc":2560,"q":"A","cl":"지성·피지","nd":["지성·피지"],"sc":4.25},{"kw":"임산부샴푸","s":7260,"p":15728,"ci":2.17,"mctr":1.7,"cpc":2420,"q":"B","cl":"대상 특화","nd":["임산부"],"sc":6.32},{"kw":"노린스샴푸","s":1290,"p":3389,"ci":2.63,"mctr":5.38,"cpc":180,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)","린스"],"sc":6.38},{"kw":"두피샴푸","s":5290,"p":306160,"ci":57.88,"mctr":1.2,"cpc":3010,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":3.78},{"kw":"쿨링샴푸","s":2040,"p":31578,"ci":15.48,"mctr":1.43,"cpc":2390,"q":"A","cl":"두피열·쿨링","nd":["두피열·쿨링"],"sc":4.13},{"kw":"수영장샴푸","s":1750,"p":9457,"ci":5.4,"mctr":0.75,"cpc":1490,"q":"C","cl":"용도·상황","nd":["수영"],"sc":4.57},{"kw":"지루성두피샴푸","s":1750,"p":5113,"ci":2.92,"mctr":1.71,"cpc":2660,"q":"C","cl":"지루성","nd":["지루성"],"sc":5.68},{"kw":"카페인샴푸","s":2680,"p":9926,"ci":3.7,"mctr":2.62,"cpc":1120,"q":"B","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":6.51},{"kw":"컬러샴푸","s":2280,"p":30580,"ci":13.41,"mctr":1.56,"cpc":660,"q":"A","cl":"새치·염색","nd":["새치·염색"],"sc":4.48},{"kw":"계란샴푸","s":1570,"p":716,"ci":0.46,"mctr":1.9,"cpc":70,"q":"C","cl":"성분 컨셉","nd":["성분:계란·달걀"],"sc":6.57},{"kw":"여행용샴푸","s":1450,"p":97685,"ci":67.37,"mctr":0.66,"cpc":1250,"q":"D","cl":"용도·상황","nd":["여행·휴대"],"sc":2.03},{"kw":"히노키샴푸","s":1170,"p":1984,"ci":1.7,"mctr":2.83,"cpc":480,"q":"C","cl":"성분 컨셉","nd":["성분:히노키"],"sc":6.54},{"kw":"노워시샴푸","s":1030,"p":2870,"ci":2.79,"mctr":1.94,"cpc":1230,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)"],"sc":5.46},{"kw":"샴푸대용량","s":700,"p":93706,"ci":133.87,"mctr":0.57,"cpc":920,"q":"D","cl":"용도·상황","nd":["대용량"],"sc":0.95},{"kw":"퍼퓸샴푸","s":1580,"p":59863,"ci":37.89,"mctr":1.58,"cpc":1530,"q":"D","cl":"냄새","nd":["냄새"],"sc":3.3},{"kw":"스칼프샴푸","s":2380,"p":37730,"ci":15.85,"mctr":1.23,"cpc":2040,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":3.87},{"kw":"일본샴푸","s":2160,"p":11884,"ci":5.5,"mctr":2.14,"cpc":430,"q":"B","cl":"일반 탐색","nd":["일반 탐색"],"sc":5.46},{"kw":"향기좋은샴푸","s":1480,"p":33544,"ci":22.66,"mctr":1.65,"cpc":1070,"q":"D","cl":"냄새","nd":["냄새"],"sc":3.81},{"kw":"하수오샴푸","s":660,"p":2605,"ci":3.95,"mctr":1.89,"cpc":240,"q":"C","cl":"성분 컨셉","nd":["성분:하수오"],"sc":4.83},{"kw":"무실리콘샴푸","s":840,"p":3133,"ci":3.73,"mctr":1.64,"cpc":1750,"q":"C","cl":"민감·저자극","nd":["민감·저자극"],"sc":4.83},{"kw":"물없이감는샴푸","s":800,"p":2930,"ci":3.66,"mctr":7.5,"cpc":590,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)"],"sc":5.94},{"kw":"지루성샴푸","s":1150,"p":5864,"ci":5.1,"mctr":2.24,"cpc":2510,"q":"C","cl":"지루성","nd":["지루성"],"sc":5.21},{"kw":"손상모샴푸","s":790,"p":13624,"ci":17.25,"mctr":2.09,"cpc":2000,"q":"D","cl":"손상·영양","nd":["손상·영양"],"sc":3.6},{"kw":"두피쿨링샴푸","s":930,"p":19543,"ci":21.01,"mctr":2.0,"cpc":2110,"q":"D","cl":"두피열·쿨링","nd":["두피열·쿨링"],"sc":3.71},{"kw":"업소용샴푸","s":340,"p":15992,"ci":47.04,"mctr":1.5,"cpc":730,"q":"D","cl":"용도·상황","nd":["업소용"],"sc":2.57},{"kw":"샴푸린스","s":1160,"p":149752,"ci":129.1,"mctr":0.34,"cpc":870,"q":"D","cl":"제형 다변화","nd":["린스"],"sc":1.37},{"kw":"지성샴푸추천","s":1420,"p":48756,"ci":34.34,"mctr":1.49,"cpc":2030,"q":"D","cl":"지성·피지","nd":["지성·피지"],"sc":2.98},{"kw":"청소년샴푸추천","s":890,"p":10729,"ci":12.06,"mctr":3.97,"cpc":1320,"q":"D","cl":"대상 특화","nd":["청소년"],"sc":4.89},{"kw":"샴푸비누","s":610,"p":110430,"ci":181.03,"mctr":2.26,"cpc":1350,"q":"D","cl":"제형 다변화","nd":["고체(샴푸바·비누)"],"sc":1.87},{"kw":"설페이트없는샴푸","s":870,"p":172,"ci":0.2,"mctr":1.51,"cpc":1020,"q":"C","cl":"민감·저자극","nd":["민감·저자극"],"sc":5.46},{"kw":"물없는샴푸","s":840,"p":4536,"ci":5.4,"mctr":4.99,"cpc":780,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)"],"sc":5.56},{"kw":"정수리냄새샴푸","s":1210,"p":6560,"ci":5.42,"mctr":2.27,"cpc":1820,"q":"C","cl":"냄새","nd":["냄새"],"sc":5.3},{"kw":"두피각질샴푸","s":1330,"p":43109,"ci":32.41,"mctr":2.29,"cpc":2020,"q":"D","cl":"각질","nd":["각질"],"sc":3.84},{"kw":"미용실쿨샴푸","s":580,"p":3356,"ci":5.79,"mctr":2.77,"cpc":900,"q":"D","cl":"두피열·쿨링","nd":["두피열·쿨링","업소용"],"sc":4.95},{"kw":"너리싱샴푸","s":680,"p":9352,"ci":13.75,"mctr":3.48,"cpc":940,"q":"D","cl":"손상·영양","nd":["손상·영양"],"sc":4.68},{"kw":"뿌리볼륨샴푸","s":580,"p":2344,"ci":4.04,"mctr":4.79,"cpc":1750,"q":"C","cl":"볼륨·힘없는모발","nd":["볼륨·힘없는모발"],"sc":5.65}],"cards":[{"name":"새치·염색","n":6,"s":46100,"share":15.8,"ci":2.9,"mctr":1.48,"cpc":820,"sc":5.72,"b":4,"lab":"들어갈 만함","tone":"ok","say":"검색의 15.8%를 먹는 큰 덩어리이고 경쟁도 평균 이하입니다. 주력 컨셉으로 가져갈 만합니다.","splits":[],"ex":["염색샴푸","보색샴푸","새치염색샴푸","블랙샴푸","새치샴푸","컬러샴푸"]},{"name":"제형 다변화","n":8,"s":22540,"share":7.7,"ci":14.3,"mctr":2.42,"cpc":825,"sc":5.75,"b":2,"lab":"경쟁 빡빡함","tone":"warn","say":"하위 3개 항목을 묶은 축입니다. 묶음 전체 경쟁강도는 14.3(검색 가중)이고, 가장 빈 곳은 <b>노워시(드라이·물없는)</b>(2.7), 가장 붐비는 곳은 <b>린스</b>(129.1)입니다.","splits":[{"name":"노워시(드라이·물없는)","n":5,"s":13650,"share":61,"ci":2.7,"mctr":4.99,"ex":["드라이샴푸","노린스샴푸","노워시샴푸"]},{"name":"고체(샴푸바·비누)","n":2,"s":7730,"share":34,"ci":17.5,"mctr":2.42,"ex":["샴푸바","샴푸비누"]},{"name":"린스","n":1,"s":1160,"share":5,"ci":129.1,"mctr":0.34,"ex":["샴푸린스"]}],"ex":["드라이샴푸","샴푸바","노린스샴푸","샴푸린스","노워시샴푸","물없는샴푸","물없이감는샴푸"]},{"name":"용도·상황","n":8,"s":21500,"share":7.4,"ci":18.7,"mctr":0.74,"cpc":1270,"sc":3.98,"b":2,"lab":"피할 곳","tone":"bad","say":"하위 4개 항목을 묶은 축입니다. 묶음 전체 경쟁강도는 18.7(검색 가중)이고, 가장 빈 곳은 <b>수영</b>(1.9), 가장 붐비는 곳은 <b>여행·휴대</b>(67.4)입니다. 광고 반응은 평균의 절반 이하입니다.","splits":[{"name":"수영","n":3,"s":7820,"share":36,"ci":1.9,"mctr":0.75,"ex":["염소제거샴푸","수영샴푸","수영장샴푸"]},{"name":"업소용","n":2,"s":8420,"share":39,"ci":12.2,"mctr":1.27,"ex":["미용실샴푸","업소용샴푸"]},{"name":"대용량","n":2,"s":3810,"share":18,"ci":48.9,"mctr":0.65,"ex":["대용량샴푸","샴푸대용량"]},{"name":"여행·휴대","n":1,"s":1450,"share":7,"ci":67.4,"mctr":0.66,"ex":["여행용샴푸"]}],"ex":["미용실샴푸","염소제거샴푸","대용량샴푸","수영샴푸","수영장샴푸","여행용샴푸","샴푸대용량"]},{"name":"민감·저자극","n":6,"s":17850,"share":6.1,"ci":3.2,"mctr":1.57,"cpc":1270,"sc":5.14,"b":2,"lab":"들어갈 만함","tone":"ok","say":"경쟁은 평균보다 낮지만 검색 비중이 6.1%로 작습니다. 보완 라인입니다.","splits":[],"ex":["약산성샴푸","산성샴푸","유기농샴푸","천연샴푸","설페이트없는샴푸","무실리콘샴푸"]},{"name":"대상 특화","n":3,"s":13910,"share":4.8,"ci":2.7,"mctr":3.21,"cpc":2180,"sc":6.32,"b":2,"lab":"지금 파고들 곳","tone":"good","say":"하위 2개 항목을 묶은 축입니다. 묶음 전체 경쟁강도는 2.7(검색 가중)이고, 가장 빈 곳은 <b>임산부</b>(2.2), 가장 붐비는 곳은 <b>청소년</b>(3.2)입니다. 광고 반응은 평균의 1.7배로 좋습니다.","splits":[{"name":"임산부","n":1,"s":7260,"share":52,"ci":2.2,"mctr":1.7,"ex":["임산부샴푸"]},{"name":"청소년","n":2,"s":6650,"share":48,"ci":3.2,"mctr":3.59,"ex":["청소년샴푸","청소년샴푸추천"]}],"ex":["임산부샴푸","청소년샴푸","청소년샴푸추천"]},{"name":"성분 컨셉","n":7,"s":13160,"share":4.5,"ci":2.6,"mctr":2.5,"cpc":550,"sc":6.54,"b":3,"lab":"지금 파고들 곳","tone":"good","say":"하위 7개 항목을 묶은 축입니다. 묶음 전체 경쟁강도는 2.6(검색 가중)이고, 가장 빈 곳은 <b>계란·달걀</b>(0.5), 가장 붐비는 곳은 <b>티트리</b>(6.1)입니다.","splits":[{"name":"계란·달걀","n":1,"s":1570,"share":12,"ci":0.5,"mctr":1.9,"ex":["계란샴푸"]},{"name":"다시마·해조","n":1,"s":2760,"share":21,"ci":0.8,"mctr":2.75,"ex":["다시마샴푸"]},{"name":"히노키","n":1,"s":1170,"share":9,"ci":1.7,"mctr":2.83,"ex":["히노키샴푸"]},{"name":"어성초","n":1,"s":2550,"share":19,"ci":2.5,"mctr":2.5,"ex":["어성초샴푸"]},{"name":"카페인·커피","n":1,"s":2680,"share":20,"ci":3.7,"mctr":2.62,"ex":["카페인샴푸"]},{"name":"하수오","n":1,"s":660,"share":5,"ci":3.9,"mctr":1.89,"ex":["하수오샴푸"]},{"name":"티트리","n":1,"s":1770,"share":13,"ci":6.1,"mctr":1.31,"ex":["티트리샴푸"]}],"ex":["다시마샴푸","카페인샴푸","어성초샴푸","티트리샴푸","계란샴푸","히노키샴푸","하수오샴푸"]},{"name":"비듬","n":1,"s":8710,"share":3.0,"ci":7.9,"mctr":2.11,"cpc":2530,"sc":5.56,"b":0,"lab":"경쟁 빡빡함","tone":"warn","say":"경쟁이 평균의 1.4배입니다. 누구나 떠올리는 고민이라 이미 제품이 몰려 있습니다. 이 컨셉 단독으로는 차별화가 어렵습니다.","splits":[],"ex":["비듬샴푸"]},{"name":"지성·피지","n":3,"s":8430,"share":2.9,"ci":14.4,"mctr":1.35,"cpc":2210,"sc":4.25,"b":0,"lab":"경쟁 빡빡함","tone":"warn","say":"경쟁이 평균의 2.5배입니다. 누구나 떠올리는 고민이라 이미 제품이 몰려 있습니다. 이 컨셉 단독으로는 차별화가 어렵습니다.","splits":[],"ex":["지성샴푸","지성두피샴푸","지성샴푸추천"]},{"name":"두피열·쿨링","n":4,"s":6190,"share":2.1,"ci":14.2,"mctr":2.08,"cpc":2050,"sc":4.54,"b":0,"lab":"경쟁 빡빡함","tone":"warn","say":"경쟁이 평균의 2.5배입니다. 누구나 떠올리는 고민이라 이미 제품이 몰려 있습니다. 이 컨셉 단독으로는 차별화가 어렵습니다.","splits":[],"ex":["쿨샴푸","쿨링샴푸","두피쿨링샴푸","미용실쿨샴푸"]},{"name":"손상·영양","n":3,"s":6060,"share":2.1,"ci":13.8,"mctr":2.4,"cpc":1820,"sc":4.68,"b":0,"lab":"경쟁 빡빡함","tone":"warn","say":"경쟁이 평균의 2.4배입니다. 누구나 떠올리는 고민이라 이미 제품이 몰려 있습니다. 이 컨셉 단독으로는 차별화가 어렵습니다.","splits":[],"ex":["단백질샴푸","손상모샴푸","너리싱샴푸"]},{"name":"냄새","n":3,"s":4270,"share":1.5,"ci":22.7,"mctr":1.65,"cpc":1530,"sc":3.81,"b":0,"lab":"피할 곳","tone":"bad","say":"검색 비중 1.5%인데 경쟁은 평균의 3.9배입니다. 신규 브랜드가 들어갈 자리가 아닙니다.","splits":[],"ex":["퍼퓸샴푸","향기좋은샴푸","정수리냄새샴푸"]},{"name":"볼륨·힘없는모발","n":3,"s":3580,"share":1.2,"ci":4.0,"mctr":3.58,"cpc":270,"sc":5.65,"b":0,"lab":"들어갈 만함","tone":"ok","say":"경쟁은 평균보다 낮지만 검색 비중이 1.2%로 작습니다. 보완 라인입니다. 광고 반응은 평균의 1.9배로 좋습니다.","splits":[],"ex":["공주부양샴푸","공중부양샴푸","뿌리볼륨샴푸"]},{"name":"지루성","n":2,"s":2900,"share":1.0,"ci":4.0,"mctr":1.98,"cpc":2585,"sc":5.44,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 2개, 검색 비중 1.0%로 표본이 작습니다. 경쟁강도 4.0는 참고만 하세요.","splits":[],"ex":["지루성두피샴푸","지루성샴푸"]},{"name":"각질","n":1,"s":1330,"share":0.5,"ci":32.4,"mctr":2.29,"cpc":2020,"sc":3.84,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 1개, 검색 비중 0.5%로 표본이 작습니다. 경쟁강도 32.4는 참고만 하세요.","splits":[],"ex":["두피각질샴푸"]},{"name":"일반 탐색","n":5,"s":115120,"share":39.5,"ci":23.2,"mctr":1.23,"cpc":2660,"sc":4.25,"b":1,"lab":"분류 불가","tone":"none","say":"'샴푸' '두피케어'처럼 무엇을 원하는지 드러나지 않는 검색입니다. 즉시가능 검색의 39.5%를 차지하지만 경쟁강도 23.2로 극심하고 CTR도 낮습니다. 자체 브랜드가 이 키워드로 싸우는 건 비효율적입니다.","splits":[],"ex":["샴푸","샴푸추천","두피샴푸","스칼프샴푸","일본샴푸"]}],"md":[{"kw":"염소제거샴푸","s":3330,"p":1063,"ci":0.32,"mctr":5.88,"cpc":870,"q":"B","cl":"용도·상황","nd":["수영"],"sc":8.76},{"kw":"다시마샴푸","s":2760,"p":2070,"ci":0.75,"mctr":2.75,"cpc":550,"q":"B","cl":"성분 컨셉","nd":["성분:다시마·해조"],"sc":8.0},{"kw":"청소년샴푸","s":5760,"p":10593,"ci":1.84,"mctr":3.21,"cpc":2180,"q":"B","cl":"대상 특화","nd":["청소년"],"sc":7.37},{"kw":"보색샴푸","s":6150,"p":3136,"ci":0.51,"mctr":1.4,"cpc":600,"q":"B","cl":"새치·염색","nd":["새치·염색"],"sc":7.27},{"kw":"새치염색샴푸","s":5750,"p":11463,"ci":1.99,"mctr":3.48,"cpc":1130,"q":"B","cl":"새치·염색","nd":["새치·염색"],"sc":7.16},{"kw":"유기농샴푸","s":2430,"p":6026,"ci":2.48,"mctr":2.92,"cpc":930,"q":"B","cl":"민감·저자극","nd":["민감·저자극"],"sc":6.83},{"kw":"어성초샴푸","s":2550,"p":6488,"ci":2.54,"mctr":2.5,"cpc":710,"q":"B","cl":"성분 컨셉","nd":["성분:어성초"],"sc":6.63},{"kw":"샴푸바","s":7120,"p":24998,"ci":3.51,"mctr":2.57,"cpc":1300,"q":"B","cl":"제형 다변화","nd":["고체(샴푸바·비누)"],"sc":6.6},{"kw":"계란샴푸","s":1570,"p":716,"ci":0.46,"mctr":1.9,"cpc":70,"q":"C","cl":"성분 컨셉","nd":["성분:계란·달걀"],"sc":6.57},{"kw":"히노키샴푸","s":1170,"p":1984,"ci":1.7,"mctr":2.83,"cpc":480,"q":"C","cl":"성분 컨셉","nd":["성분:히노키"],"sc":6.54},{"kw":"카페인샴푸","s":2680,"p":9926,"ci":3.7,"mctr":2.62,"cpc":1120,"q":"B","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":6.51},{"kw":"드라이샴푸","s":9690,"p":23780,"ci":2.45,"mctr":1.79,"cpc":700,"q":"B","cl":"제형 다변화","nd":["노워시(드라이·물없는)"],"sc":6.44},{"kw":"노린스샴푸","s":1290,"p":3389,"ci":2.63,"mctr":5.38,"cpc":180,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)","린스"],"sc":6.38},{"kw":"임산부샴푸","s":7260,"p":15728,"ci":2.17,"mctr":1.7,"cpc":2420,"q":"B","cl":"대상 특화","nd":["임산부"],"sc":6.32},{"kw":"새치샴푸","s":3200,"p":12388,"ci":3.87,"mctr":2.04,"cpc":980,"q":"B","cl":"새치·염색","nd":["새치·염색"],"sc":5.97},{"kw":"수영샴푸","s":2740,"p":4471,"ci":1.63,"mctr":0.64,"cpc":1290,"q":"B","cl":"용도·상황","nd":["수영"],"sc":5.87},{"kw":"공주부양샴푸","s":1790,"p":2503,"ci":1.4,"mctr":0.79,"cpc":180,"q":"C","cl":"볼륨·힘없는모발","nd":["볼륨·힘없는모발"],"sc":5.87},{"kw":"지루성두피샴푸","s":1750,"p":5113,"ci":2.92,"mctr":1.71,"cpc":2660,"q":"C","cl":"지루성","nd":["지루성"],"sc":5.68},{"kw":"단백질샴푸","s":4590,"p":44467,"ci":9.69,"mctr":2.4,"cpc":1820,"q":"A","cl":"손상·영양","nd":["손상·영양"],"sc":5.59},{"kw":"산성샴푸","s":3270,"p":8820,"ci":2.7,"mctr":0.3,"cpc":960,"q":"B","cl":"민감·저자극","nd":["민감·저자극"],"sc":5.59}],"org":[{"kw":"다시마샴푸","s":2760,"p":2070,"ci":0.75,"mctr":2.75,"cpc":550,"q":"B","cl":"성분 컨셉","nd":["성분:다시마·해조"],"sc":8.0},{"kw":"유기농샴푸","s":2430,"p":6026,"ci":2.48,"mctr":2.92,"cpc":930,"q":"B","cl":"민감·저자극","nd":["민감·저자극"],"sc":6.83},{"kw":"어성초샴푸","s":2550,"p":6488,"ci":2.54,"mctr":2.5,"cpc":710,"q":"B","cl":"성분 컨셉","nd":["성분:어성초"],"sc":6.63},{"kw":"계란샴푸","s":1570,"p":716,"ci":0.46,"mctr":1.9,"cpc":70,"q":"C","cl":"성분 컨셉","nd":["성분:계란·달걀"],"sc":6.57},{"kw":"히노키샴푸","s":1170,"p":1984,"ci":1.7,"mctr":2.83,"cpc":480,"q":"C","cl":"성분 컨셉","nd":["성분:히노키"],"sc":6.54},{"kw":"카페인샴푸","s":2680,"p":9926,"ci":3.7,"mctr":2.62,"cpc":1120,"q":"B","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":6.51},{"kw":"노린스샴푸","s":1290,"p":3389,"ci":2.63,"mctr":5.38,"cpc":180,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)","린스"],"sc":6.38},{"kw":"물없이감는샴푸","s":800,"p":2930,"ci":3.66,"mctr":7.5,"cpc":590,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)"],"sc":5.94},{"kw":"지루성두피샴푸","s":1750,"p":5113,"ci":2.92,"mctr":1.71,"cpc":2660,"q":"C","cl":"지루성","nd":["지루성"],"sc":5.68},{"kw":"뿌리볼륨샴푸","s":580,"p":2344,"ci":4.04,"mctr":4.79,"cpc":1750,"q":"C","cl":"볼륨·힘없는모발","nd":["볼륨·힘없는모발"],"sc":5.65},{"kw":"물없는샴푸","s":840,"p":4536,"ci":5.4,"mctr":4.99,"cpc":780,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)"],"sc":5.56},{"kw":"공중부양샴푸","s":1210,"p":9697,"ci":8.01,"mctr":3.58,"cpc":270,"q":"D","cl":"볼륨·힘없는모발","nd":["볼륨·힘없는모발"],"sc":5.46},{"kw":"노워시샴푸","s":1030,"p":2870,"ci":2.79,"mctr":1.94,"cpc":1230,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)"],"sc":5.46},{"kw":"일본샴푸","s":2160,"p":11884,"ci":5.5,"mctr":2.14,"cpc":430,"q":"B","cl":"일반 탐색","nd":["일반 탐색"],"sc":5.46}],"ad":[{"kw":"노린스샴푸","s":1290,"p":3389,"ci":2.63,"mctr":5.38,"cpc":180,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)","린스"],"sc":6.38},{"kw":"계란샴푸","s":1570,"p":716,"ci":0.46,"mctr":1.9,"cpc":70,"q":"C","cl":"성분 컨셉","nd":["성분:계란·달걀"],"sc":6.57},{"kw":"공중부양샴푸","s":1210,"p":9697,"ci":8.01,"mctr":3.58,"cpc":270,"q":"D","cl":"볼륨·힘없는모발","nd":["볼륨·힘없는모발"],"sc":5.46},{"kw":"물없이감는샴푸","s":800,"p":2930,"ci":3.66,"mctr":7.5,"cpc":590,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)"],"sc":5.94},{"kw":"하수오샴푸","s":660,"p":2605,"ci":3.95,"mctr":1.89,"cpc":240,"q":"C","cl":"성분 컨셉","nd":["성분:하수오"],"sc":4.83},{"kw":"염소제거샴푸","s":3330,"p":1063,"ci":0.32,"mctr":5.88,"cpc":870,"q":"B","cl":"용도·상황","nd":["수영"],"sc":8.76},{"kw":"물없는샴푸","s":840,"p":4536,"ci":5.4,"mctr":4.99,"cpc":780,"q":"C","cl":"제형 다변화","nd":["노워시(드라이·물없는)"],"sc":5.56},{"kw":"히노키샴푸","s":1170,"p":1984,"ci":1.7,"mctr":2.83,"cpc":480,"q":"C","cl":"성분 컨셉","nd":["성분:히노키"],"sc":6.54},{"kw":"다시마샴푸","s":2760,"p":2070,"ci":0.75,"mctr":2.75,"cpc":550,"q":"B","cl":"성분 컨셉","nd":["성분:다시마·해조"],"sc":8.0},{"kw":"일본샴푸","s":2160,"p":11884,"ci":5.5,"mctr":2.14,"cpc":430,"q":"B","cl":"일반 탐색","nd":["일반 탐색"],"sc":5.46},{"kw":"너리싱샴푸","s":680,"p":9352,"ci":13.75,"mctr":3.48,"cpc":940,"q":"D","cl":"손상·영양","nd":["손상·영양"],"sc":4.68},{"kw":"어성초샴푸","s":2550,"p":6488,"ci":2.54,"mctr":2.5,"cpc":710,"q":"B","cl":"성분 컨셉","nd":["성분:어성초"],"sc":6.63},{"kw":"유기농샴푸","s":2430,"p":6026,"ci":2.48,"mctr":2.92,"cpc":930,"q":"B","cl":"민감·저자극","nd":["민감·저자극"],"sc":6.83},{"kw":"미용실쿨샴푸","s":580,"p":3356,"ci":5.79,"mctr":2.77,"cpc":900,"q":"D","cl":"두피열·쿨링","nd":["두피열·쿨링","업소용"],"sc":4.95}],"lead":"바로 진입 가능한 키워드 중 <b>성분 컨셉</b>이 가장 비어 있고(경쟁강도 2.6), <b>냄새</b>가 가장 붐빕니다(22.7).","comp":[{"key":"즉시가능","label":"바로 진입 가능","s":291650,"n":63,"share":18.4},{"key":"인증필요","label":"인증 필요 (탈모 표방)","s":3000,"n":2,"share":0.2},{"key":"표현불가","label":"표현 불가","s":0,"n":0,"share":0.0},{"key":"규제","label":"판매·표방 불가","s":53460,"n":4,"share":3.4},{"key":"브랜드계열","label":"타 브랜드·셀럽·유통","s":1226980,"n":162,"share":77.6},{"key":"오타","label":"오타","s":6570,"n":4,"share":0.4}],"lock":{"n":2,"s":3000,"ci":0.8,"free_ci":19.3,"mctr":1.56,"vs":1.0,"top":[{"kw":"탈모샴푸바","s":1700,"p":1047,"ci":0.62,"mctr":1.46,"typo":false},{"kw":"탈모비누","s":1300,"p":1270,"ci":0.98,"mctr":1.66,"typo":false}]},"reg":[{"kw":"지루성두피염","t":"질환명","s":19190,"p":1617,"ci":0.08},{"kw":"지루성두피염샴푸","t":"질환명","s":12080,"p":1398,"ci":0.12},{"kw":"니조랄샴푸","t":"의약품","s":11680,"p":19,"ci":0.0},{"kw":"니조랄","t":"의약품","s":10510,"p":22,"ci":0.0}],"ban":[],"typos":[{"kw":"샴프","s":2450},{"kw":"삼푸","s":2440},{"kw":"염색삼푸","s":1050},{"kw":"염색샴프","s":630}],"gate":{"cpc":1012,"ctr":1.89},"sum":{"n":63,"s":291650,"tot":1581660,"medS":1820.0,"medC":5.79,"medP":12388.0,"mob":83.3,"cpc":1250,"mctr":1.89,"qA":16,"qB":16,"qC":15,"qD":16,"top20":78.3}},"탈모케어":{"rows":[{"kw":"샴푸","s":79100,"p":1842909,"ci":23.3,"mctr":0.74,"cpc":2700,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.31},{"kw":"맥주효모샴푸","s":11040,"p":17301,"ci":1.57,"mctr":3.67,"cpc":1800,"q":"B","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":7.54},{"kw":"두피앰플","s":10640,"p":29208,"ci":2.75,"mctr":0.81,"cpc":2810,"q":"B","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":5.85},{"kw":"샴푸추천","s":26230,"p":1837345,"ci":70.05,"mctr":1.46,"cpc":2660,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.92},{"kw":"바이오틴샴푸","s":1930,"p":3475,"ci":1.8,"mctr":3.14,"cpc":1080,"q":"C","cl":"성분 컨셉","nd":["성분:비오틴"],"sc":6.54},{"kw":"두피에센스","s":3500,"p":45333,"ci":12.95,"mctr":1.32,"cpc":1460,"q":"A","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":5.0},{"kw":"맥주샴푸","s":1520,"p":17467,"ci":11.49,"mctr":2.14,"cpc":1000,"q":"D","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":4.85},{"kw":"약산성샴푸","s":8690,"p":67198,"ci":7.73,"mctr":1.25,"cpc":2280,"q":"B","cl":"민감·저자극","nd":["민감·저자극"],"sc":4.85},{"kw":"남자샴푸","s":1660,"p":32997,"ci":19.88,"mctr":0.98,"cpc":1710,"q":"D","cl":"대상 특화","nd":["남성"],"sc":3.92},{"kw":"헤어앰플","s":2550,"p":57227,"ci":22.44,"mctr":1.78,"cpc":1380,"q":"A","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":4.15},{"kw":"두피샴푸","s":5300,"p":307457,"ci":58.01,"mctr":1.2,"cpc":3010,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.0},{"kw":"독일맥주효모샴푸","s":590,"p":1647,"ci":2.79,"mctr":6.8,"cpc":870,"q":"C","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":6.08},{"kw":"카페인샴푸","s":2690,"p":9926,"ci":3.69,"mctr":2.62,"cpc":1120,"q":"B","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":6.54},{"kw":"블랙빈샴푸","s":870,"p":1866,"ci":2.14,"mctr":5.77,"cpc":550,"q":"C","cl":"새치·염색","nd":["새치·염색","성분:검은콩·약콩"],"sc":5.92},{"kw":"지성샴푸","s":4450,"p":48788,"ci":10.96,"mctr":0.76,"cpc":2210,"q":"A","cl":"지성·피지","nd":["지성·피지"],"sc":4.54},{"kw":"쿨샴푸","s":2690,"p":34204,"ci":12.72,"mctr":2.17,"cpc":1990,"q":"A","cl":"두피열·쿨링","nd":["두피열·쿨링"],"sc":5.31},{"kw":"풀빅샴푸","s":260,"p":59,"ci":0.23,"mctr":13.52,"cpc":100,"q":"C","cl":"성분 컨셉","nd":["성분:풀빅"],"sc":6.15},{"kw":"비듬샴푸","s":8610,"p":68953,"ci":8.01,"mctr":2.11,"cpc":2530,"q":"B","cl":"비듬","nd":["비듬"],"sc":5.0},{"kw":"볼륨샴푸","s":1370,"p":49475,"ci":36.11,"mctr":2.13,"cpc":1380,"q":"D","cl":"볼륨·힘없는모발","nd":["볼륨·힘없는모발"],"sc":3.69},{"kw":"커피샴푸","s":1210,"p":2612,"ci":2.16,"mctr":2.21,"cpc":470,"q":"C","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":5.77},{"kw":"효모샴푸","s":270,"p":17022,"ci":63.04,"mctr":1.26,"cpc":890,"q":"D","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":3.54},{"kw":"대용량샴푸","s":3130,"p":92469,"ci":29.54,"mctr":0.73,"cpc":1450,"q":"A","cl":"용도·상황","nd":["대용량"],"sc":3.31},{"kw":"비건샴푸","s":1190,"p":15261,"ci":12.82,"mctr":0.7,"cpc":1270,"q":"D","cl":"민감·저자극","nd":["민감·저자극"],"sc":3.69},{"kw":"노세범샴푸","s":310,"p":1640,"ci":5.29,"mctr":0.26,"cpc":70,"q":"C","cl":"지성·피지","nd":["지성·피지"],"sc":4.23},{"kw":"약콩샴푸","s":180,"p":85,"ci":0.47,"mctr":6.0,"cpc":140,"q":"C","cl":"성분 컨셉","nd":["성분:검은콩·약콩"],"sc":5.69},{"kw":"지루성두피샴푸","s":1750,"p":5113,"ci":2.92,"mctr":1.71,"cpc":2420,"q":"C","cl":"지루성","nd":["지루성"],"sc":5.62}],"cards":[{"name":"성분 컨셉","n":9,"s":19690,"share":10.8,"ci":3.5,"mctr":3.14,"cpc":890,"sc":6.08,"b":2,"lab":"지금 파고들 곳","tone":"good","say":"하위 5개 항목을 묶은 축입니다. 묶음 전체 경쟁강도는 3.5(검색 가중)이고, 가장 빈 곳은 <b>풀빅</b>(0.2), 가장 붐비는 곳은 <b>맥주효모</b>(4.0)입니다. 광고 반응은 평균의 1.8배로 좋습니다.","splits":[{"name":"풀빅","n":1,"s":260,"share":1,"ci":0.2,"mctr":13.52,"ex":["풀빅샴푸"]},{"name":"검은콩·약콩","n":1,"s":180,"share":1,"ci":0.5,"mctr":6.0,"ex":["약콩샴푸"]},{"name":"비오틴","n":1,"s":1930,"share":10,"ci":1.8,"mctr":3.14,"ex":["바이오틴샴푸"]},{"name":"카페인·커피","n":2,"s":3900,"share":20,"ci":3.2,"mctr":2.42,"ex":["카페인샴푸","커피샴푸"]},{"name":"맥주효모","n":4,"s":13420,"share":68,"ci":4.0,"mctr":2.91,"ex":["맥주효모샴푸","맥주샴푸","독일맥주효모샴푸"]}],"ex":["맥주효모샴푸","카페인샴푸","바이오틴샴푸","맥주샴푸","커피샴푸","독일맥주효모샴푸","효모샴푸"]},{"name":"제형 다변화","n":3,"s":16690,"share":9.2,"ci":7.9,"mctr":1.32,"cpc":1460,"sc":5.0,"b":1,"lab":"들어갈 만함","tone":"ok","say":"하위 1개 항목을 묶은 축입니다. 묶음 전체 경쟁강도는 7.9(검색 가중)이고, 가장 빈 곳은 <b>앰플·에센스·세럼</b>(7.9), 가장 붐비는 곳은 <b>앰플·에센스·세럼</b>(7.9)입니다.","splits":[{"name":"앰플·에센스·세럼","n":3,"s":16690,"share":100,"ci":7.9,"mctr":1.32,"ex":["두피앰플","두피에센스","헤어앰플"]}],"ex":["두피앰플","두피에센스","헤어앰플"]},{"name":"민감·저자극","n":2,"s":9880,"share":5.4,"ci":10.3,"mctr":0.97,"cpc":1775,"sc":4.27,"b":1,"lab":"경쟁 빡빡함","tone":"warn","say":"경쟁이 평균의 1.1배입니다. 누구나 떠올리는 고민이라 이미 제품이 몰려 있습니다. 이 컨셉 단독으로는 차별화가 어렵습니다.","splits":[],"ex":["약산성샴푸","비건샴푸"]},{"name":"비듬","n":1,"s":8610,"share":4.7,"ci":8.0,"mctr":2.11,"cpc":2530,"sc":5.0,"b":1,"lab":"들어갈 만함","tone":"ok","say":"경쟁은 평균보다 낮지만 검색 비중이 4.7%로 작습니다. 보완 라인입니다.","splits":[],"ex":["비듬샴푸"]},{"name":"지성·피지","n":2,"s":4760,"share":2.6,"ci":8.1,"mctr":0.51,"cpc":1140,"sc":4.38,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 2개, 검색 비중 2.6%로 표본이 작습니다. 경쟁강도 8.1는 참고만 하세요.","splits":[],"ex":["지성샴푸","노세범샴푸"]},{"name":"용도·상황","n":1,"s":3130,"share":1.7,"ci":29.5,"mctr":0.73,"cpc":1450,"sc":3.31,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 1개, 검색 비중 1.7%로 표본이 작습니다. 경쟁강도 29.5는 참고만 하세요.","splits":[{"name":"대용량","n":1,"s":3130,"share":100,"ci":29.5,"mctr":0.73,"ex":["대용량샴푸"]}],"ex":["대용량샴푸"]},{"name":"두피열·쿨링","n":1,"s":2690,"share":1.5,"ci":12.7,"mctr":2.17,"cpc":1990,"sc":5.31,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 1개, 검색 비중 1.5%로 표본이 작습니다. 경쟁강도 12.7는 참고만 하세요.","splits":[],"ex":["쿨샴푸"]},{"name":"지루성","n":1,"s":1750,"share":1.0,"ci":2.9,"mctr":1.71,"cpc":2420,"sc":5.62,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 1개, 검색 비중 1.0%로 표본이 작습니다. 경쟁강도 2.9는 참고만 하세요.","splits":[],"ex":["지루성두피샴푸"]},{"name":"대상 특화","n":1,"s":1660,"share":0.9,"ci":19.9,"mctr":0.98,"cpc":1710,"sc":3.92,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 1개, 검색 비중 0.9%로 표본이 작습니다. 경쟁강도 19.9는 참고만 하세요.","splits":[{"name":"남성","n":1,"s":1660,"share":100,"ci":19.9,"mctr":0.98,"ex":["남자샴푸"]}],"ex":["남자샴푸"]},{"name":"볼륨·힘없는모발","n":1,"s":1370,"share":0.8,"ci":36.1,"mctr":2.13,"cpc":1380,"sc":3.69,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 1개, 검색 비중 0.8%로 표본이 작습니다. 경쟁강도 36.1는 참고만 하세요.","splits":[],"ex":["볼륨샴푸"]},{"name":"새치·염색","n":1,"s":870,"share":0.5,"ci":2.1,"mctr":5.77,"cpc":550,"sc":5.92,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 1개, 검색 비중 0.5%로 표본이 작습니다. 경쟁강도 2.1는 참고만 하세요.","splits":[],"ex":["블랙빈샴푸"]},{"name":"일반 탐색","n":3,"s":110630,"share":60.9,"ci":58.0,"mctr":1.2,"cpc":2700,"sc":4.31,"b":0,"lab":"분류 불가","tone":"none","say":"'샴푸' '두피케어'처럼 무엇을 원하는지 드러나지 않는 검색입니다. 즉시가능 검색의 60.9%를 차지하지만 경쟁강도 58.0로 극심하고 CTR도 낮습니다. 자체 브랜드가 이 키워드로 싸우는 건 비효율적입니다.","splits":[],"ex":["샴푸","샴푸추천","두피샴푸"]}],"md":[{"kw":"맥주효모샴푸","s":11040,"p":17301,"ci":1.57,"mctr":3.67,"cpc":1800,"q":"B","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":7.54},{"kw":"바이오틴샴푸","s":1930,"p":3475,"ci":1.8,"mctr":3.14,"cpc":1080,"q":"C","cl":"성분 컨셉","nd":["성분:비오틴"],"sc":6.54},{"kw":"카페인샴푸","s":2690,"p":9926,"ci":3.69,"mctr":2.62,"cpc":1120,"q":"B","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":6.54},{"kw":"두피앰플","s":10640,"p":29208,"ci":2.75,"mctr":0.81,"cpc":2810,"q":"B","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":5.85},{"kw":"커피샴푸","s":1210,"p":2612,"ci":2.16,"mctr":2.21,"cpc":470,"q":"C","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":5.77},{"kw":"지루성두피샴푸","s":1750,"p":5113,"ci":2.92,"mctr":1.71,"cpc":2420,"q":"C","cl":"지루성","nd":["지루성"],"sc":5.62},{"kw":"쿨샴푸","s":2690,"p":34204,"ci":12.72,"mctr":2.17,"cpc":1990,"q":"A","cl":"두피열·쿨링","nd":["두피열·쿨링"],"sc":5.31},{"kw":"두피에센스","s":3500,"p":45333,"ci":12.95,"mctr":1.32,"cpc":1460,"q":"A","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":5.0},{"kw":"비듬샴푸","s":8610,"p":68953,"ci":8.01,"mctr":2.11,"cpc":2530,"q":"B","cl":"비듬","nd":["비듬"],"sc":5.0},{"kw":"샴푸추천","s":26230,"p":1837345,"ci":70.05,"mctr":1.46,"cpc":2660,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.92},{"kw":"맥주샴푸","s":1520,"p":17467,"ci":11.49,"mctr":2.14,"cpc":1000,"q":"D","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":4.85},{"kw":"약산성샴푸","s":8690,"p":67198,"ci":7.73,"mctr":1.25,"cpc":2280,"q":"B","cl":"민감·저자극","nd":["민감·저자극"],"sc":4.85},{"kw":"지성샴푸","s":4450,"p":48788,"ci":10.96,"mctr":0.76,"cpc":2210,"q":"A","cl":"지성·피지","nd":["지성·피지"],"sc":4.54},{"kw":"샴푸","s":79100,"p":1842909,"ci":23.3,"mctr":0.74,"cpc":2700,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.31},{"kw":"헤어앰플","s":2550,"p":57227,"ci":22.44,"mctr":1.78,"cpc":1380,"q":"A","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":4.15},{"kw":"두피샴푸","s":5300,"p":307457,"ci":58.01,"mctr":1.2,"cpc":3010,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.0},{"kw":"남자샴푸","s":1660,"p":32997,"ci":19.88,"mctr":0.98,"cpc":1710,"q":"D","cl":"대상 특화","nd":["남성"],"sc":3.92},{"kw":"볼륨샴푸","s":1370,"p":49475,"ci":36.11,"mctr":2.13,"cpc":1380,"q":"D","cl":"볼륨·힘없는모발","nd":["볼륨·힘없는모발"],"sc":3.69},{"kw":"비건샴푸","s":1190,"p":15261,"ci":12.82,"mctr":0.7,"cpc":1270,"q":"D","cl":"민감·저자극","nd":["민감·저자극"],"sc":3.69},{"kw":"대용량샴푸","s":3130,"p":92469,"ci":29.54,"mctr":0.73,"cpc":1450,"q":"A","cl":"용도·상황","nd":["대용량"],"sc":3.31}],"org":[{"kw":"바이오틴샴푸","s":1930,"p":3475,"ci":1.8,"mctr":3.14,"cpc":1080,"q":"C","cl":"성분 컨셉","nd":["성분:비오틴"],"sc":6.54},{"kw":"카페인샴푸","s":2690,"p":9926,"ci":3.69,"mctr":2.62,"cpc":1120,"q":"B","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":6.54},{"kw":"풀빅샴푸","s":260,"p":59,"ci":0.23,"mctr":13.52,"cpc":100,"q":"C","cl":"성분 컨셉","nd":["성분:풀빅"],"sc":6.15},{"kw":"독일맥주효모샴푸","s":590,"p":1647,"ci":2.79,"mctr":6.8,"cpc":870,"q":"C","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":6.08},{"kw":"블랙빈샴푸","s":870,"p":1866,"ci":2.14,"mctr":5.77,"cpc":550,"q":"C","cl":"새치·염색","nd":["새치·염색","성분:검은콩·약콩"],"sc":5.92},{"kw":"커피샴푸","s":1210,"p":2612,"ci":2.16,"mctr":2.21,"cpc":470,"q":"C","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":5.77},{"kw":"지루성두피샴푸","s":1750,"p":5113,"ci":2.92,"mctr":1.71,"cpc":2420,"q":"C","cl":"지루성","nd":["지루성"],"sc":5.62},{"kw":"맥주샴푸","s":1520,"p":17467,"ci":11.49,"mctr":2.14,"cpc":1000,"q":"D","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":4.85},{"kw":"효모샴푸","s":270,"p":17022,"ci":63.04,"mctr":1.26,"cpc":890,"q":"D","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":3.54}],"ad":[{"kw":"블랙빈샴푸","s":870,"p":1866,"ci":2.14,"mctr":5.77,"cpc":550,"q":"C","cl":"새치·염색","nd":["새치·염색","성분:검은콩·약콩"],"sc":5.92},{"kw":"독일맥주효모샴푸","s":590,"p":1647,"ci":2.79,"mctr":6.8,"cpc":870,"q":"C","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":6.08},{"kw":"커피샴푸","s":1210,"p":2612,"ci":2.16,"mctr":2.21,"cpc":470,"q":"C","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":5.77},{"kw":"바이오틴샴푸","s":1930,"p":3475,"ci":1.8,"mctr":3.14,"cpc":1080,"q":"C","cl":"성분 컨셉","nd":["성분:비오틴"],"sc":6.54},{"kw":"카페인샴푸","s":2690,"p":9926,"ci":3.69,"mctr":2.62,"cpc":1120,"q":"B","cl":"성분 컨셉","nd":["성분:카페인·커피"],"sc":6.54},{"kw":"맥주샴푸","s":1520,"p":17467,"ci":11.49,"mctr":2.14,"cpc":1000,"q":"D","cl":"성분 컨셉","nd":["성분:맥주효모"],"sc":4.85}],"lead":"바로 진입 가능한 키워드 중 <b>성분 컨셉</b>이 가장 비어 있고(경쟁강도 3.5), <b>민감·저자극</b>이 가장 붐빕니다(10.3).","comp":[{"key":"즉시가능","label":"바로 진입 가능","s":181730,"n":26,"share":19.6},{"key":"인증필요","label":"인증 필요 (탈모 표방)","s":113180,"n":25,"share":12.2},{"key":"표현불가","label":"표현 불가","s":8820,"n":3,"share":1.0},{"key":"규제","label":"판매·표방 불가","s":14360,"n":4,"share":1.6},{"key":"브랜드계열","label":"타 브랜드·셀럽·유통","s":604260,"n":111,"share":65.3},{"key":"오타","label":"오타","s":3560,"n":2,"share":0.4}],"lock":{"n":25,"s":113180,"ci":9.1,"free_ci":25.4,"mctr":2.26,"vs":62.3,"top":[{"kw":"탈모샴푸","s":39680,"p":121147,"ci":3.05,"mctr":1.3,"typo":false},{"kw":"탈모","s":17450,"p":218747,"ci":12.54,"mctr":0.39,"typo":false},{"kw":"탈모샴프","s":9960,"p":121039,"ci":12.15,"mctr":1.71,"typo":true},{"kw":"탈모앰플","s":8630,"p":11984,"ci":1.39,"mctr":4.41,"typo":false},{"kw":"탈모샴푸추천","s":7870,"p":119653,"ci":15.2,"mctr":2.26,"typo":false},{"kw":"탈모샴푸1위","s":4960,"p":119653,"ci":24.12,"mctr":3.38,"typo":false},{"kw":"탈모삼푸","s":3740,"p":121356,"ci":32.45,"mctr":2.45,"typo":true},{"kw":"탈모두피앰플","s":2250,"p":7954,"ci":3.54,"mctr":3.56,"typo":false},{"kw":"탈모엠플","s":1950,"p":11620,"ci":5.96,"mctr":5.04,"typo":true},{"kw":"남자탈모앰플","s":1780,"p":434,"ci":0.24,"mctr":4.91,"typo":false}]},"reg":[{"kw":"탈모영양제","t":"건강기능식품","s":5120,"p":8646,"ci":1.69},{"kw":"탈모치료제","t":"의약품","s":4060,"p":44,"ci":0.01},{"kw":"두피영양제","t":"건강기능식품","s":3830,"p":10954,"ci":2.86},{"kw":"머리발모제","t":"의약품","s":1350,"p":58,"ci":0.04}],"ban":[{"kw":"탈모예방","s":6290},{"kw":"탈모방지샴푸","s":1530},{"kw":"탈모예방샴푸","s":1000}],"typos":[{"kw":"삼푸","s":2470},{"kw":"두피엠플","s":1090}],"gate":{"cpc":1270,"ctr":1.75},"sum":{"n":26,"s":181730,"tot":925910,"medS":2240.0,"medC":9.485,"medP":23337.5,"mob":81.7,"cpc":1415,"mctr":1.75,"qA":8,"qB":5,"qC":8,"qD":5,"top20":98.6}},"두피케어":{"rows":[{"kw":"두피앰플","s":10730,"p":29109,"ci":2.71,"mctr":0.81,"cpc":2810,"q":"B","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":5.94},{"kw":"두피스케일링","s":16520,"p":12180,"ci":0.74,"mctr":0.99,"cpc":4480,"q":"B","cl":"각질","nd":["각질","스케일러·스크럽"],"sc":6.88},{"kw":"헤어토닉","s":7480,"p":39399,"ci":5.27,"mctr":0.43,"cpc":1660,"q":"B","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":5.0},{"kw":"두피토닉","s":4390,"p":27706,"ci":6.31,"mctr":0.75,"cpc":2070,"q":"B","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":5.5},{"kw":"염색두피보호제","s":1000,"p":884,"ci":0.88,"mctr":1.9,"cpc":900,"q":"C","cl":"새치·염색","nd":["새치·염색","두피 강화·보습"],"sc":7.31},{"kw":"두피스케일러","s":2060,"p":4487,"ci":2.18,"mctr":0.59,"cpc":1710,"q":"B","cl":"각질","nd":["각질","스케일러·스크럽"],"sc":5.5},{"kw":"두피케어","s":6300,"p":512448,"ci":81.34,"mctr":0.59,"cpc":8620,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.0},{"kw":"두피팩","s":2690,"p":39955,"ci":14.85,"mctr":0.89,"cpc":1190,"q":"A","cl":"제형 다변화","nd":["팩·트리트먼트"],"sc":4.56},{"kw":"두피보호제","s":1100,"p":2021,"ci":1.84,"mctr":0.87,"cpc":1210,"q":"C","cl":"두피 강화·보습","nd":["두피 강화·보습"],"sc":6.0},{"kw":"두피가려움","s":7130,"p":10238,"ci":1.44,"mctr":1.33,"cpc":4040,"q":"B","cl":"가려움","nd":["가려움"],"sc":7.06},{"kw":"두피쿨링스프레이","s":1940,"p":2072,"ci":1.07,"mctr":1.84,"cpc":940,"q":"B","cl":"두피열·쿨링","nd":["두피열·쿨링","토닉·스프레이"],"sc":7.13},{"kw":"두피보습제","s":1150,"p":1329,"ci":1.16,"mctr":1.41,"cpc":1370,"q":"C","cl":"두피 강화·보습","nd":["두피 강화·보습"],"sc":7.0},{"kw":"탄산토닉","s":510,"p":17407,"ci":34.13,"mctr":1.26,"cpc":70,"q":"D","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":4.0},{"kw":"두피스크럽","s":790,"p":4566,"ci":5.78,"mctr":0.31,"cpc":1280,"q":"C","cl":"각질","nd":["각질","스케일러·스크럽"],"sc":4.19},{"kw":"두피쿨링","s":1610,"p":33302,"ci":20.68,"mctr":0.59,"cpc":2520,"q":"D","cl":"두피열·쿨링","nd":["두피열·쿨링"],"sc":3.75},{"kw":"두피도포기","s":240,"p":7802,"ci":32.51,"mctr":0.39,"cpc":390,"q":"D","cl":"제형 다변화","nd":["캡·도구"],"sc":2.94},{"kw":"두피각질제거","s":2220,"p":27988,"ci":12.61,"mctr":1.22,"cpc":3510,"q":"A","cl":"각질","nd":["각질"],"sc":4.94},{"kw":"두피밤","s":410,"p":1979,"ci":4.83,"mctr":6.75,"cpc":70,"q":"C","cl":"제형 다변화","nd":["팩·트리트먼트"],"sc":6.25},{"kw":"쿨링스프레이","s":2990,"p":25608,"ci":8.56,"mctr":1.58,"cpc":680,"q":"B","cl":"두피열·쿨링","nd":["두피열·쿨링","토닉·스프레이"],"sc":5.94},{"kw":"두피스프레이","s":780,"p":11005,"ci":14.11,"mctr":0.64,"cpc":550,"q":"D","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":4.12},{"kw":"두피토너","s":540,"p":1743,"ci":3.23,"mctr":1.73,"cpc":1670,"q":"C","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":6.25},{"kw":"헤어앰플","s":2530,"p":57227,"ci":22.62,"mctr":1.78,"cpc":1510,"q":"A","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":4.72},{"kw":"두피각질","s":4420,"p":62225,"ci":14.08,"mctr":0.55,"cpc":4120,"q":"A","cl":"각질","nd":["각질"],"sc":4.0},{"kw":"두피에센스","s":3510,"p":45333,"ci":12.92,"mctr":1.32,"cpc":1610,"q":"A","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":4.84},{"kw":"두피클리닉","s":4280,"p":2228,"ci":0.52,"mctr":1.32,"cpc":3700,"q":"B","cl":"일반 탐색","nd":["일반 탐색"],"sc":7.34},{"kw":"두피스칼프","s":450,"p":42028,"ci":93.4,"mctr":0.36,"cpc":780,"q":"D","cl":"일반 탐색","nd":["일반 탐색"],"sc":1.88},{"kw":"두피관리제품","s":280,"p":58320,"ci":208.29,"mctr":3.49,"cpc":2130,"q":"D","cl":"일반 탐색","nd":["일반 탐색"],"sc":2.88},{"kw":"스칼프토닉","s":370,"p":5165,"ci":13.96,"mctr":1.78,"cpc":560,"q":"D","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":4.72},{"kw":"두피열","s":700,"p":3273,"ci":4.68,"mctr":0.47,"cpc":2560,"q":"C","cl":"두피열·쿨링","nd":["두피열·쿨링"],"sc":4.44},{"kw":"헤어쿨링스프레이","s":220,"p":2465,"ci":11.2,"mctr":1.79,"cpc":730,"q":"D","cl":"두피열·쿨링","nd":["두피열·쿨링","토닉·스프레이"],"sc":4.94},{"kw":"샴푸","s":79300,"p":1842909,"ci":23.24,"mctr":0.74,"cpc":2700,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.69},{"kw":"두피클리너","s":90,"p":141466,"ci":1571.84,"mctr":4.0,"cpc":90,"q":"D","cl":"각질","nd":["각질","스케일러·스크럽"],"sc":2.31}],"cards":[{"name":"제형 다변화","n":12,"s":34180,"share":20.3,"ci":8.3,"mctr":1.07,"cpc":1350,"sc":4.78,"b":3,"lab":"들어갈 만함","tone":"ok","say":"하위 4개 항목을 묶은 축입니다. 묶음 전체 경쟁강도는 8.3(검색 가중)이고, 가장 빈 곳은 <b>토닉·스프레이</b>(7.3), 가장 붐비는 곳은 <b>캡·도구</b>(32.5)입니다.","splits":[{"name":"토닉·스프레이","n":6,"s":14070,"share":41,"ci":7.3,"mctr":1.0,"ex":["헤어토닉","두피토닉","두피스프레이"]},{"name":"앰플·에센스·세럼","n":3,"s":16770,"share":49,"ci":7.9,"mctr":1.32,"ex":["두피앰플","두피에센스","헤어앰플"]},{"name":"팩·트리트먼트","n":2,"s":3100,"share":9,"ci":13.5,"mctr":3.82,"ex":["두피팩","두피밤"]},{"name":"캡·도구","n":1,"s":240,"share":1,"ci":32.5,"mctr":0.39,"ex":["두피도포기"]}],"ex":["두피앰플","헤어토닉","두피토닉","두피에센스","두피팩","헤어앰플","두피스프레이"]},{"name":"각질","n":6,"s":26100,"share":15.5,"ci":9.2,"mctr":0.79,"cpc":2610,"sc":4.56,"b":2,"lab":"들어갈 만함","tone":"ok","say":"검색의 15.5%를 먹는 큰 덩어리이고 경쟁도 평균 이하입니다. 주력 컨셉으로 가져갈 만합니다.","splits":[],"ex":["두피스케일링","두피각질","두피각질제거","두피스케일러","두피스크럽","두피클리너"]},{"name":"두피열·쿨링","n":5,"s":7460,"share":4.4,"ci":8.6,"mctr":1.58,"cpc":940,"sc":4.94,"b":2,"lab":"들어갈 만함","tone":"ok","say":"경쟁은 평균보다 낮지만 검색 비중이 4.4%로 작습니다. 보완 라인입니다.","splits":[],"ex":["쿨링스프레이","두피쿨링스프레이","두피쿨링","두피열","헤어쿨링스프레이"]},{"name":"가려움","n":1,"s":7130,"share":4.2,"ci":1.4,"mctr":1.33,"cpc":4040,"sc":7.06,"b":1,"lab":"지금 파고들 곳","tone":"good","say":"규모는 작지만 경쟁이 평균의 7.1분의 1입니다. 라인 확장용 테스트 자리입니다.","splits":[],"ex":["두피가려움"]},{"name":"두피 강화·보습","n":2,"s":2250,"share":1.3,"ci":1.5,"mctr":1.14,"cpc":1290,"sc":6.5,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 2개, 검색 비중 1.3%로 표본이 작습니다. 경쟁강도 1.5는 참고만 하세요.","splits":[],"ex":["두피보습제","두피보호제"]},{"name":"새치·염색","n":1,"s":1000,"share":0.6,"ci":0.9,"mctr":1.9,"cpc":900,"sc":7.31,"b":0,"lab":"표본 부족","tone":"none","say":"키워드 1개, 검색 비중 0.6%로 표본이 작습니다. 경쟁강도 0.9는 참고만 하세요.","splits":[],"ex":["염색두피보호제"]},{"name":"일반 탐색","n":5,"s":90610,"share":53.7,"ci":81.3,"mctr":0.74,"cpc":2700,"sc":4.0,"b":1,"lab":"분류 불가","tone":"none","say":"'샴푸' '두피케어'처럼 무엇을 원하는지 드러나지 않는 검색입니다. 즉시가능 검색의 53.7%를 차지하지만 경쟁강도 81.3로 극심하고 CTR도 낮습니다. 자체 브랜드가 이 키워드로 싸우는 건 비효율적입니다.","splits":[],"ex":["샴푸","두피케어","두피클리닉","두피스칼프","두피관리제품"]}],"md":[{"kw":"두피클리닉","s":4280,"p":2228,"ci":0.52,"mctr":1.32,"cpc":3700,"q":"B","cl":"일반 탐색","nd":["일반 탐색"],"sc":7.34},{"kw":"염색두피보호제","s":1000,"p":884,"ci":0.88,"mctr":1.9,"cpc":900,"q":"C","cl":"새치·염색","nd":["새치·염색","두피 강화·보습"],"sc":7.31},{"kw":"두피쿨링스프레이","s":1940,"p":2072,"ci":1.07,"mctr":1.84,"cpc":940,"q":"B","cl":"두피열·쿨링","nd":["두피열·쿨링","토닉·스프레이"],"sc":7.13},{"kw":"두피가려움","s":7130,"p":10238,"ci":1.44,"mctr":1.33,"cpc":4040,"q":"B","cl":"가려움","nd":["가려움"],"sc":7.06},{"kw":"두피보습제","s":1150,"p":1329,"ci":1.16,"mctr":1.41,"cpc":1370,"q":"C","cl":"두피 강화·보습","nd":["두피 강화·보습"],"sc":7.0},{"kw":"두피스케일링","s":16520,"p":12180,"ci":0.74,"mctr":0.99,"cpc":4480,"q":"B","cl":"각질","nd":["각질","스케일러·스크럽"],"sc":6.88},{"kw":"두피보호제","s":1100,"p":2021,"ci":1.84,"mctr":0.87,"cpc":1210,"q":"C","cl":"두피 강화·보습","nd":["두피 강화·보습"],"sc":6.0},{"kw":"두피앰플","s":10730,"p":29109,"ci":2.71,"mctr":0.81,"cpc":2810,"q":"B","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":5.94},{"kw":"쿨링스프레이","s":2990,"p":25608,"ci":8.56,"mctr":1.58,"cpc":680,"q":"B","cl":"두피열·쿨링","nd":["두피열·쿨링","토닉·스프레이"],"sc":5.94},{"kw":"두피토닉","s":4390,"p":27706,"ci":6.31,"mctr":0.75,"cpc":2070,"q":"B","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":5.5},{"kw":"두피스케일러","s":2060,"p":4487,"ci":2.18,"mctr":0.59,"cpc":1710,"q":"B","cl":"각질","nd":["각질","스케일러·스크럽"],"sc":5.5},{"kw":"헤어토닉","s":7480,"p":39399,"ci":5.27,"mctr":0.43,"cpc":1660,"q":"B","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":5.0},{"kw":"두피각질제거","s":2220,"p":27988,"ci":12.61,"mctr":1.22,"cpc":3510,"q":"A","cl":"각질","nd":["각질"],"sc":4.94},{"kw":"두피에센스","s":3510,"p":45333,"ci":12.92,"mctr":1.32,"cpc":1610,"q":"A","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":4.84},{"kw":"헤어앰플","s":2530,"p":57227,"ci":22.62,"mctr":1.78,"cpc":1510,"q":"A","cl":"제형 다변화","nd":["앰플·에센스·세럼"],"sc":4.72},{"kw":"샴푸","s":79300,"p":1842909,"ci":23.24,"mctr":0.74,"cpc":2700,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.69},{"kw":"두피팩","s":2690,"p":39955,"ci":14.85,"mctr":0.89,"cpc":1190,"q":"A","cl":"제형 다변화","nd":["팩·트리트먼트"],"sc":4.56},{"kw":"두피케어","s":6300,"p":512448,"ci":81.34,"mctr":0.59,"cpc":8620,"q":"A","cl":"일반 탐색","nd":["일반 탐색"],"sc":4.0},{"kw":"두피각질","s":4420,"p":62225,"ci":14.08,"mctr":0.55,"cpc":4120,"q":"A","cl":"각질","nd":["각질"],"sc":4.0},{"kw":"두피쿨링","s":1610,"p":33302,"ci":20.68,"mctr":0.59,"cpc":2520,"q":"D","cl":"두피열·쿨링","nd":["두피열·쿨링"],"sc":3.75}],"org":[{"kw":"염색두피보호제","s":1000,"p":884,"ci":0.88,"mctr":1.9,"cpc":900,"q":"C","cl":"새치·염색","nd":["새치·염색","두피 강화·보습"],"sc":7.31},{"kw":"두피쿨링스프레이","s":1940,"p":2072,"ci":1.07,"mctr":1.84,"cpc":940,"q":"B","cl":"두피열·쿨링","nd":["두피열·쿨링","토닉·스프레이"],"sc":7.13},{"kw":"두피보습제","s":1150,"p":1329,"ci":1.16,"mctr":1.41,"cpc":1370,"q":"C","cl":"두피 강화·보습","nd":["두피 강화·보습"],"sc":7.0},{"kw":"두피밤","s":410,"p":1979,"ci":4.83,"mctr":6.75,"cpc":70,"q":"C","cl":"제형 다변화","nd":["팩·트리트먼트"],"sc":6.25},{"kw":"두피토너","s":540,"p":1743,"ci":3.23,"mctr":1.73,"cpc":1670,"q":"C","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":6.25},{"kw":"쿨링스프레이","s":2990,"p":25608,"ci":8.56,"mctr":1.58,"cpc":680,"q":"B","cl":"두피열·쿨링","nd":["두피열·쿨링","토닉·스프레이"],"sc":5.94},{"kw":"두피각질제거","s":2220,"p":27988,"ci":12.61,"mctr":1.22,"cpc":3510,"q":"A","cl":"각질","nd":["각질"],"sc":4.94},{"kw":"헤어쿨링스프레이","s":220,"p":2465,"ci":11.2,"mctr":1.79,"cpc":730,"q":"D","cl":"두피열·쿨링","nd":["두피열·쿨링","토닉·스프레이"],"sc":4.94},{"kw":"스칼프토닉","s":370,"p":5165,"ci":13.96,"mctr":1.78,"cpc":560,"q":"D","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":4.72},{"kw":"탄산토닉","s":510,"p":17407,"ci":34.13,"mctr":1.26,"cpc":70,"q":"D","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":4.0}],"ad":[{"kw":"탄산토닉","s":510,"p":17407,"ci":34.13,"mctr":1.26,"cpc":70,"q":"D","cl":"제형 다변화","nd":["토닉·스프레이"],"sc":4.0},{"kw":"쿨링스프레이","s":2990,"p":25608,"ci":8.56,"mctr":1.58,"cpc":680,"q":"B","cl":"두피열·쿨링","nd":["두피열·쿨링","토닉·스프레이"],"sc":5.94},{"kw":"염색두피보호제","s":1000,"p":884,"ci":0.88,"mctr":1.9,"cpc":900,"q":"C","cl":"새치·염색","nd":["새치·염색","두피 강화·보습"],"sc":7.31},{"kw":"두피쿨링스프레이","s":1940,"p":2072,"ci":1.07,"mctr":1.84,"cpc":940,"q":"B","cl":"두피열·쿨링","nd":["두피열·쿨링","토닉·스프레이"],"sc":7.13}],"lead":"바로 진입 가능한 키워드 중 <b>가려움</b>이 가장 비어 있습니다(경쟁강도 1.4). 표본이 충분한 축은 모두 카테고리 평균(9.9) 이하라, 두드러지게 붐비는 축은 없습니다.","comp":[{"key":"즉시가능","label":"바로 진입 가능","s":168730,"n":32,"share":31.1},{"key":"인증필요","label":"인증 필요 (탈모 표방)","s":4200,"n":4,"share":0.8},{"key":"표현불가","label":"표현 불가","s":0,"n":0,"share":0.0},{"key":"규제","label":"판매·표방 불가","s":63350,"n":9,"share":11.7},{"key":"브랜드계열","label":"타 브랜드·셀럽·유통","s":304680,"n":58,"share":56.2},{"key":"오타","label":"오타","s":1100,"n":1,"share":0.2}],"lock":{"n":4,"s":4200,"ci":7.4,"free_ci":18.2,"mctr":2.96,"vs":2.5,"top":[{"kw":"탈모두피앰플","s":2260,"p":7954,"ci":3.52,"mctr":3.56,"typo":false},{"kw":"탈모스프레이","s":700,"p":1631,"ci":2.33,"mctr":1.21,"typo":false},{"kw":"탈모토닉","s":620,"p":12248,"ci":19.75,"mctr":2.35,"typo":false},{"kw":"두피탈모앰플","s":620,"p":9328,"ci":15.05,"mctr":3.75,"typo":false}]},"reg":[{"kw":"미녹시딜5%","t":"의약품","s":12620,"p":3,"ci":0.0},{"kw":"니조랄샴푸","t":"의약품","s":11680,"p":19,"ci":0.0},{"kw":"니조랄","t":"의약품","s":10510,"p":22,"ci":0.0},{"kw":"바르는미녹시딜","t":"의약품","s":6060,"p":75,"ci":0.01},{"kw":"미녹시딜가격","t":"의약품","s":5790,"p":772,"ci":0.13},{"kw":"탈모영양제","t":"건강기능식품","s":5110,"p":8646,"ci":1.69},{"kw":"마이녹실5%","t":"의약품","s":4100,"p":3,"ci":0.0},{"kw":"두피영양제","t":"건강기능식품","s":3830,"p":10954,"ci":2.86},{"kw":"두피모낭염","t":"질환명","s":3650,"p":233,"ci":0.06}],"ban":[],"typos":[{"kw":"두피엠플","s":1100}],"gate":{"cpc":1238,"ctr":1.1},"sum":{"n":32,"s":168730,"tot":542060,"medS":1775.0,"medC":9.879999999999999,"medP":14793.5,"mob":82.5,"cpc":1560,"mctr":1.1,"qA":7,"qB":9,"qC":7,"qD":9,"top20":96.8}}};
+const INSIGHT = {
+"샴푸": {
+  verdict: "들어갈 수 있는 시장이 가장 크고 경쟁도 가장 낮습니다(경쟁강도 중앙 5.8). 누구나 떠올리는 고민(냄새·지성·쿨링·손상)은 붐비고, 성분·제형·대상을 특정한 컨셉이 비어 있습니다.",
+  warn: false,
+  md: [
+    ["<strong>염색샴푸가 가장 큰 단일 공백입니다.</strong> 검색 24,970에 경쟁강도 1.6. 보색샴푸(0.51), 새치염색샴푸(1.99)까지 새치·염색 축 전체가 비어 있습니다. <strong>다만 모발 색을 바꾸는 기능은 염모 기능성화장품 영역일 수 있어</strong>, 일시적 착색인 보색·블랙 계열과 구분해 인증 필요 여부부터 확인하세요.","염색샴푸 24,970 · 경쟁강도 1.6"],
+    ["<strong>성분을 이름에 건 샴푸가 통째로 비어 있습니다.</strong> 계란(0.46), 다시마(0.75), 히노키(1.7), 어성초(2.5). 하나하나는 작지만 묶으면 월 1.3만 회이고 경쟁강도는 평균의 절반 이하입니다. OEM 처방에서 성분 하나를 전면에 세우는 것만으로 차별화됩니다.","성분 컨셉 경쟁강도 2.6"],
+    ["<strong>노워시 제형이 반응이 가장 좋습니다.</strong> 드라이샴푸(9,690·2.45), 물없이감는샴푸(CTR 7.5%), 노린스샴푸(CTR 5.38%). 일반 샴푸와 제형이 달라 기존 강자들과 정면으로 부딪히지 않습니다.","노워시 경쟁강도 2.7 · CTR 5.0%"],
+    ["<strong>대상을 좁히면 경쟁이 빠집니다.</strong> 청소년샴푸(5,760·1.84·CTR 3.21%), 임산부샴푸(7,260·2.17). 같은 약산성·저자극 처방이라도 누구를 위한 제품인지 붙이면 자리가 생깁니다.","대상 특화 경쟁강도 2.7"],
+    ["<strong>누구나 떠올리는 고민은 피하세요.</strong> 냄새 22.7, 지성 14.4, 쿨링 14.2, 손상 13.8로 카테고리 평균(5.8)의 2~4배입니다. 대용량(48.9)은 가격 경쟁 영역입니다.","냄새 22.7 · 대용량 48.9"]
+  ],
+  mk: [
+    ["<strong>'샴푸' '샴푸추천'에는 광고를 걸지 마세요.</strong> 상품이 184만 개에 CTR 0.74%인데 광고단가는 2,700원입니다. 신규 브랜드가 이 키워드로 노출을 사도 클릭은 이미 아는 브랜드로 갑니다.","CTR 0.74% · CPC 2,700원"],
+    ["<strong>염소제거샴푸가 가장 효율 좋은 자리입니다.</strong> 검색 3,330에 상품 1,063개, CTR 5.88%, CPC 870원. 수영 강습 수요라 여름과 방학 시즌에 집중하면 됩니다.","기회점수 8.76 · 카테고리 1위"],
+    ["<strong>광고단가 100원대 이하 자리가 있습니다.</strong> 계란샴푸 70원, 노린스샴푸 180원, 하수오샴푸 240원. 상품명에 넣고 최저 입찰로 걸어두면 적은 예산으로 노출을 확보합니다.","CPC 70~240원"],
+    ["<strong>오타를 상품명에 심으세요.</strong> 샴프 2,450회, 삼푸 2,440회, 염색삼푸 1,050회, 염색샴프 630회. 오타 그대로 검색하는 수요가 월 6,570회 있습니다.","오타 합계 6,570회"],
+    ["<strong>브랜드·셀럽·유통 검색이 77.6%입니다.</strong> 자체 브랜드는 결국 브랜드명 검색을 만들어야 이 시장의 본류에 들어옵니다. 셀럽 이름으로 검색되는 제품이 샴푸 검색의 6.1%를 차지하는 만큼, 인플루언서 협업이 브랜드 검색을 만드는 빠른 경로 중 하나입니다.","셀럽 키워드 96,670회"]
+  ]
+},
+"탈모케어": {
+  verdict: "인증 없이는 탈모케어라고 부를 수 없는 시장입니다. 열린 검색의 61%가 '샴푸' '샴푸추천' 같은 일반 샴푸 키워드이고, 진짜 탈모 수요(113,180회)는 인증 뒤에 잠겨 있습니다.",
+  warn: true,
+  md: [
+    ["<strong>지금 열린 우회로는 성분입니다.</strong> 맥주효모샴푸(11,040·1.57·CTR 3.67%), 바이오틴샴푸(1.80), 카페인샴푸(3.69), 블랙빈샴푸(CTR 5.77%). &lsquo;탈모&rsquo;라는 말 없이 탈모 고민층에 닿는 키워드이고, 경쟁강도가 카테고리 평균(9.5)의 절반 이하입니다. 단, 성분명 옆에 탈모 효과를 암시하는 문구를 붙이면 같은 규제에 걸립니다.","성분 컨셉 경쟁강도 3.5"],
+    ["<strong>인증 뒤의 시장은 크고 덜 붐빕니다.</strong> 탈모 표방 키워드 검색 113,180회는 지금 열린 시장의 62%에 해당하고, 경쟁강도(검색 가중)는 9.1로 열린 쪽(25.4)의 3분의 1입니다. 인증 자체가 경쟁자를 걸러내는 벽이기 때문입니다.","잠긴 검색 113,180 · 경쟁 9.1 vs 25.4"],
+    ["<strong>인증을 받는다면 앰플이 가장 비어 있습니다.</strong> 남자탈모앰플(1,780·상품 434개·0.24), 여성탈모앰플(1,760·547개·0.31), 탈모앰플(8,630·1.39·CTR 4.41%). 탈모샴푸(39,680·3.05)보다도 공급이 훨씬 적습니다.","탈모앰플 CTR 4.41%"],
+    ["<strong>인증 문턱이 생각보다 낮을 수 있습니다.</strong> 탈모 증상 완화 기능성은 식약처가 고시한 원료(비오틴, 덱스판테놀, 엘-멘톨, 징크피리치온 등)를 고시 기준대로 쓰면 개별 심사 대신 보고로 등록할 수 있는 것으로 알려져 있습니다. 거래 중인 OEM사에 보고 가능한 처방이 있는지 먼저 확인해보세요.","OEM 처방 확인 권장"],
+    ["<strong>&lsquo;탈모방지&rsquo; &lsquo;탈모예방&rsquo;은 인증이 있어도 쓰지 마세요.</strong> 해당 키워드 검색이 8,820회 있지만 화장품에는 쓸 수 없는 것으로 알려진 표현입니다. 인증 후 허용되는 문구는 &lsquo;탈모 증상의 완화에 도움&rsquo; 형태입니다.","표현 불가 3개 · 8,820회"]
+  ],
+  mk: [
+    ["<strong>&lsquo;탈모&rsquo; 키워드에는 광고를 걸지 마세요.</strong> 인증 없이 탈모를 표방한 광고는 심사에서 반려되거나 문제가 될 수 있습니다. 탈모샴푸(CPC 3,060원)처럼 비싼 자리는 어차피 인증 보유 브랜드들의 영역입니다.","탈모샴푸 CPC 3,060원"],
+    ["<strong>성분 키워드는 광고 효율도 좋습니다.</strong> 독일맥주효모샴푸 CTR 6.8%·CPC 870원, 블랙빈샴푸 CTR 5.77%·550원, 커피샴푸 CPC 470원. 반응이 카테고리 평균(1.75%)의 3~4배입니다.","CTR 5.8~6.8%"],
+    ["<strong>열린 검색의 규모는 착시에 가깝습니다.</strong> 즉시가능 키워드 26개 중 10개가 샴푸 파일에도 있고, 검색량으로는 78.5%가 겹칩니다. 인증 없이 탈모케어에 들어가면 사실상 샴푸 시장에서 싸우게 됩니다.","샴푸 파일과 78.5% 중복"],
+    ["<strong>셀럽 이름으로 검색되는 제품이 7.5%입니다.</strong> 이시언샴푸·홍현희샴푸처럼 사람 이름이 곧 제품명이 된 사례가 많은 카테고리입니다. 인증 전이라도 성분 샴푸로 브랜드 검색을 먼저 쌓아두면, 인증 후 탈모 라인을 얹기 쉽습니다.","셀럽 키워드 69,210회"],
+    ["<strong>가을이 성수기일 가능성이 큽니다.</strong> 이 데이터는 8월 기준이라 탈모 검색이 가을보다 낮게 잡혔을 수 있습니다. 인증을 검토한다면 월별 추이를 확인한 뒤 성수기에 맞춰 일정을 역산하세요.","8월 스냅샷"]
+  ]
+},
+"두피케어": {
+  verdict: "브랜드 비중이 가장 낮아 열린 시장이 넓고(31.1%), 표본이 충분한 축은 모두 평균 이하 경쟁입니다. 대신 광고 반응이 셋 중 가장 약해(CTR 1.1%), 광고보다 상품명과 콘텐츠로 들어가는 시장입니다.",
+  warn: false,
+  md: [
+    ["<strong>두피가려움이 가장 큰 공백입니다.</strong> 검색 7,130에 경쟁강도 1.44로 카테고리 평균(9.9)의 7분의 1입니다. 가려움을 전면에 건 두피 제품이 부족합니다. 다만 &lsquo;지루성&rsquo;처럼 질환을 연상시키는 표현으로 넘어가지 않게 주의하세요.","두피가려움 7,130 · 1.44"],
+    ["<strong>두피 보습·보호가 비어 있습니다.</strong> 두피보습제(1.16), 두피보호제(1.84), 염색두피보호제(0.88). 특히 염색두피보호제는 상품이 884개뿐인데, 염색 전에 바르는 용도가 명확해 셀프염색 수요를 바로 잡습니다.","염색두피보호제 상품 884개"],
+    ["<strong>쿨링은 &lsquo;두피&rsquo;를 붙인 스프레이로 가세요.</strong> 두피쿨링스프레이는 1.07로 비어 있는데, &lsquo;두피&rsquo;를 뺀 쿨링스프레이는 8.56으로 8배 붐빕니다. 용도를 이름에 명시하는 것만으로 경쟁 상대가 달라집니다.","1.07 vs 8.56"],
+    ["<strong>두피스케일링은 수치만 믿지 마세요.</strong> 검색 16,520에 경쟁강도 0.74로 최고 수준이지만 CTR 0.99%에 광고단가 4,480원입니다. 샵 시술을 찾는 검색이 섞였을 가능성이 있어, 스케일러 제품이라면 &lsquo;셀프&rsquo; &lsquo;홈케어&rsquo; 같은 수식어로 제품 의도를 분명히 하세요.","CTR 0.99% · CPC 4,480원"],
+    ["<strong>토닉·앰플은 고를 이유를 붙여야 팔립니다.</strong> 헤어토닉(5.27), 두피토닉(6.31), 두피앰플(2.71) 모두 평균 이하 경쟁이지만 CTR이 0.4~0.8%로 낮습니다. 제품은 있는데 선택 기준이 안 보이는 시장이라, 가려움·보습·쿨링 같은 고민을 붙여 파세요.","CTR 0.4~0.8%"]
+  ],
+  mk: [
+    ["<strong>광고 반응이 셋 중 가장 약합니다.</strong> 모바일 CTR 중앙값 1.1%로 샴푸(1.89%)보다 낮습니다. 예산을 광고보다 상품명·상세페이지·리뷰 확보에 먼저 쓰세요.","CTR 중앙 1.1%"],
+    ["<strong>두피밤은 CTR 6.75%에 광고단가 70원입니다.</strong> 검색 410회로 작지만, 최저가 입찰로 반응을 확인해보는 테스트 자리로 적합합니다.","CTR 6.75% · CPC 70원"],
+    ["<strong>미녹시딜 키워드는 건드리지 마세요.</strong> 미녹시딜5%(12,620)·바르는미녹시딜(6,060)·미녹시딜가격(5,790)은 상품이 거의 없어 경쟁 0으로 보이지만 일반의약품입니다. 이 카테고리 검색의 11.7%가 이런 판매·표방 불가 키워드입니다.","규제 키워드 11.7%"],
+    ["<strong>넓은 단어일수록 비싸고 반응이 없습니다.</strong> 두피케어는 상품 51만 개에 광고단가 8,620원, 두피각질은 CPC 4,120원에 CTR 0.55%입니다.","두피케어 CPC 8,620원"],
+    ["<strong>오타 &lsquo;두피엠플&rsquo;이 월 1,100회입니다.</strong> 상품명 태그에 넣어두면 광고 없이 받는 트래픽입니다.","두피엠플 1,100회"]
+  ]
+}
+};
+</script>
+<script>
+const fmt = n => n.toLocaleString('ko-KR');
+const QN = {A:'대시장·고경쟁', B:'기회', C:'니치', D:'회피'};
+const cats = Object.keys(DATA);
+const CMP = {
+"샴푸":["1순위","들어갈 수 있는 검색이 가장 크고 경쟁도 가장 낮습니다. 성분 컨셉, 노워시 제형, 대상 특화가 비어 있고, 새치·염색도 크지만 염모 기능성 확인이 먼저입니다."],
+"두피케어":["2순위","브랜드 비중이 가장 낮아 열린 시장이 넓습니다. 두피 보습·보호와 쿨링, 가려움이 비어 있지만 광고 반응은 약합니다."],
+"탈모케어":["인증 시 1순위","인증 없이 열린 곳은 대부분 일반 샴푸 키워드입니다. 탈모 표방 시장은 크고 덜 붐비지만 기능성 인증이 있어야 들어갑니다."]};
+const LAYC={'즉시가능':'L-ok','인증필요':'L-lock','표현불가':'L-ban','규제':'L-reg','브랜드계열':'L-brand','오타':'L-typo'};
+let cur = '샴푸', qf = 'B', sk = 'sc', sd = -1, q = '';
+
+/* ---------- 01 카테고리 비교 ---------- */
+function renderTop(){
+  const order=['샴푸','두피케어','탈모케어'];
+  const bc=Math.min(...cats.map(c=>DATA[c].sum.medC));
+  const bt=Math.max(...cats.map(c=>DATA[c].sum.mctr));
+  document.getElementById('top').innerHTML=`
+  <section style="margin-top:0">
+    <div class="sh"><h2><span>01</span>어느 카테고리부터 손댈 것인가</h2>
+      <p>카드를 누르면 그 카테고리의 상세 분석으로 이동합니다</p></div>
+    <p class="lead">뷰티는 <b>브랜드로 사는 시장</b>입니다. 세 카테고리 모두 검색의 절반 이상이 브랜드·셀럽 지명이고, 1위 키워드를 빼도 비중이 거의 줄지 않을 만큼 넓게 퍼져 있습니다. 여기에 의약품·질환명 같은 <b>규제 키워드</b>와 기능성 인증이 필요한 <b>탈모 표방 키워드</b>까지 걷어내면, 자체 브랜드가 지금 바로 들어갈 수 있는 검색은 전체의 18~31%입니다.</p>
+    <div class="cmp">${order.map(c=>{const s=DATA[c].sum,[rk,note]=CMP[c],cp=DATA[c].comp;
+      const ok=cp.find(x=>x.key==='즉시가능').share;
+      return `<button class="cc" data-c="${c}" aria-current="${c===cur}">
+        <div class="cc-t"><h4>${c}</h4><span class="pill ${rk==='1순위'?'good':(rk==='2순위'?'ok':'warn')}">${rk}</span></div>
+        <div class="mini-stack">${cp.filter(x=>x.share>0).map(x=>`<i class="${LAYC[x.key]}" style="width:${x.share}%"></i>`).join('')}</div>
+        <p class="mslab">바로 진입 가능 ${ok}% · 전체 ${fmt(s.tot)}회</p>
+        <dl>
+          <dt>진입 가능 검색량</dt><dd>${fmt(s.s)}</dd>
+          <dt>경쟁강도 중앙값</dt><dd class="${s.medC===bc?'g':(s.medC>bc*1.6?'b':'')}">${s.medC.toFixed(1)}</dd>
+          <dt>모바일 CTR</dt><dd class="${s.mctr===bt?'g':(s.mctr<bt*.6?'b':'')}">${s.mctr}%</dd>
+          <dt>기회 키워드</dt><dd>${s.qB}개</dd>
+        </dl><p>${note}</p>
+        <span class="go">${c===cur?'지금 보는 중':'상세 분석 보기'}<span class="cur">${c===cur?'▾':'→'}</span></span>
+      </button>`;}).join('')}</div>
+    <div class="skey" style="margin-top:14px">
+      <span><i class="L-ok"></i>바로 진입 가능</span><span><i class="L-lock"></i>인증 필요</span>
+      <span><i class="L-ban"></i>표현 불가</span><span><i class="L-reg"></i>판매·표방 불가</span>
+      <span><i class="L-brand"></i>타 브랜드·셀럽·유통</span><span><i class="L-typo"></i>오타</span></div>
+  </section>`;
+  document.querySelectorAll('.cc').forEach(el=>el.onclick=()=>{
+    const c=el.dataset.c;
+    if(c!==cur){cur=c;qf='B';sk='sc';sd=-1;q='';pv='md';renderTop();render();}
+    const v=document.getElementById('view');
+    if(v&&v.scrollIntoView) v.scrollIntoView({behavior:'smooth',block:'start'});});
+}
+
+/* ---------- 03 먼저 걸러낸 것 ---------- */
+function gateSection(d){
+  const cp=d.comp.filter(x=>x.share>0);
+  const L=d.lock;
+  const reg=d.reg.length?`<table><thead><tr><th>키워드</th><th>검색</th><th>상품수</th><th>경쟁강도</th></tr></thead><tbody>
+    ${d.reg.slice(0,8).map(r=>`<tr><td>${r.kw}<span class="t">${r.t}</span></td><td>${fmt(r.s)}</td><td>${fmt(r.p)}</td><td class="z">${r.ci}</td></tr>`).join('')}
+    </tbody></table>`:'<p class="gnote">해당 없음</p>';
+  const lock=L.n?`<div class="lockhead">
+      <div>잠긴 검색량<b class="w">${fmt(L.s)}</b></div>
+      <div>진입 가능 대비<b>${L.vs}%</b></div>
+      <div>경쟁강도(가중)<b>${L.ci}</b><span style="font-size:10.5px">열린 곳 ${L.free_ci}</span></div></div>
+    <table><thead><tr><th>키워드</th><th>검색</th><th>상품수</th><th>경쟁</th><th>CTR</th></tr></thead><tbody>
+    ${L.top.slice(0,7).map(r=>`<tr><td>${r.kw}${r.typo?'<span class="ty">오타</span>':''}</td><td>${fmt(r.s)}</td><td>${fmt(r.p)}</td><td>${r.ci}</td><td>${r.mctr.toFixed(1)}%</td></tr>`).join('')}
+    </tbody></table>`:'<p class="gnote">해당 없음</p>';
+  return `
+    <div class="panel" style="padding:16px 18px">
+      <div class="stack">${cp.map(x=>`<i class="${LAYC[x.key]}" style="width:${x.share}%" title="${x.label} ${x.share}%"></i>`).join('')}</div>
+      <div class="skey">${cp.map(x=>`<span><i class="${LAYC[x.key]}"></i>${x.label} <b>${x.share}%</b></span>`).join('')}</div>
+    </div>
+    <div class="gate3">
+      <div class="gbox"><h3>판매·표방 불가 <span class="pill bad">건드리지 않음</span></h3>
+        <p class="role">의약품·질환명·건강기능식품 키워드입니다. 상품이 거의 없어 경쟁강도가 0에 가깝게 찍히지만, 상품이 없는 이유는 수요가 아니라 <b>규제</b>입니다. 그대로 점수를 매기면 이것들이 기회 1위를 싹쓸이합니다.</p>
+        ${reg}</div>
+      <div class="gbox"><h3>인증 필요 <span class="pill warn">탈모 표방</span></h3>
+        <p class="role">&lsquo;탈모&rsquo;를 상품명·광고에 쓰려면 탈모 증상 완화 기능성화장품 인증이 필요합니다. 지금은 못 들어가지만, 인증하면 열리는 시장의 크기입니다.</p>
+        ${lock}</div>
+    </div>
+    ${(d.ban.length||d.typos.length)?`<div class="gate3" style="grid-template-columns:1fr 1fr">
+      ${d.ban.length?`<div class="gbox"><h3>표현 불가</h3><p class="role">방지·예방·치료·발모처럼 화장품에 쓸 수 없는 것으로 알려진 표현이 든 키워드입니다. 인증이 있어도 상품명에 넣지 마세요.</p>
+        <div class="chips2">${d.ban.map(r=>`<span>${r.kw}<b>${fmt(r.s)}</b></span>`).join('')}</div></div>`:'<div></div>'}
+      ${d.typos.length?`<div class="gbox"><h3>오타 키워드</h3><p class="role">네이버가 자동 교정해 상품수가 정상어와 같게 찍히므로 경쟁강도는 의미가 없습니다. 대신 <b>상품명·태그에 넣으면 광고 없이 받는 트래픽</b>입니다.</p>
+        <div class="chips2">${d.typos.map(r=>`<span>${r.kw}<b>${fmt(r.s)}</b></span>`).join('')}</div></div>`:'<div></div>'}
+    </div>`:''}`;
+}
+
+/* ---------- 03 시장 지도 ---------- */
+function drawMap(d){
+  const W=980,H=470,L=58,R=22,T=22,B=44;
+  const rows=d.rows,iw=W-L-R,ih=H-T-B;
+  const lg=v=>Math.log10(Math.max(v,0.01));
+  const xs=rows.map(r=>lg(r.s)),ys=rows.map(r=>lg(r.ci));
+  const x0=Math.min(...xs)-.12,x1=Math.max(...xs)+.12;
+  const y0=Math.min(...ys)-.15,y1=Math.max(...ys)+.15;
+  const X=v=>L+(lg(v)-x0)/(x1-x0)*iw, Y=v=>T+ih-(lg(v)-y0)/(y1-y0)*ih;
+  const mx=X(d.sum.medS),my=Y(d.sum.medC);
+  const mc=Math.max(...rows.map(r=>r.mctr))||1;
+  const rad=v=>3.4+Math.sqrt(v/mc)*8.5;
+  const C={A:'var(--warn)',B:'var(--good)',C:'var(--info)',D:'var(--bad)'};
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="검색량 대비 경쟁강도 분포">`;
+  s+=`<rect x="${mx}" y="${my}" width="${L+iw-mx}" height="${T+ih-my}" rx="8" fill="var(--good)" opacity=".07"/>`;
+  for(let e=Math.ceil(x0);e<=x1;e++){const px=X(Math.pow(10,e));
+    s+=`<line x1="${px}" y1="${T}" x2="${px}" y2="${T+ih}" stroke="var(--line2)"/>
+    <text x="${px}" y="${T+ih+17}" fill="var(--ink3)" font-size="10.5" text-anchor="middle" font-family="Space Grotesk">${fmt(Math.pow(10,e))}</text>`;}
+  for(let e=Math.ceil(y0);e<=y1;e++){const py=Y(Math.pow(10,e)),vv=Math.pow(10,e);
+    s+=`<line x1="${L}" y1="${py}" x2="${L+iw}" y2="${py}" stroke="var(--line2)"/>
+    <text x="${L-9}" y="${py+4}" fill="var(--ink3)" font-size="10.5" text-anchor="end" font-family="Space Grotesk">${vv<1?vv.toFixed(1):fmt(vv)}</text>`;}
+  s+=`<line x1="${mx}" y1="${T}" x2="${mx}" y2="${T+ih}" stroke="var(--ink3)" stroke-dasharray="2 5" opacity=".6"/>
+      <line x1="${L}" y1="${my}" x2="${L+iw}" y2="${my}" stroke="var(--ink3)" stroke-dasharray="2 5" opacity=".6"/>`;
+  const ql=(x,y,t,a)=>`<text x="${x}" y="${y}" fill="var(--ink3)" font-size="11" text-anchor="${a}">${t}</text>`;
+  s+=ql(L+8,T+15,'수요 적고 경쟁 심함','start')+ql(L+iw-8,T+15,'수요 크고 경쟁 심함','end')
+    +ql(L+8,T+ih-8,'니치','start')+ql(L+iw-8,T+ih-8,'수요 있고 경쟁 낮음 — 목표 구간','end');
+  rows.slice().sort((a,b)=>b.s-a.s).forEach(r=>{
+    s+=`<circle class="dot" cx="${X(r.s).toFixed(1)}" cy="${Y(r.ci).toFixed(1)}" r="${rad(r.mctr).toFixed(1)}"
+      fill="${C[r.q]}" fill-opacity="${r.q==='B'?.55:.26}" stroke="${C[r.q]}" stroke-opacity=".8" stroke-width="1.1"
+      data-k="${r.kw}" data-s="${fmt(r.s)}" data-c="${r.ci}" data-m="${r.mctr}" data-p="${fmt(r.p)}"
+      data-a="${fmt(r.cpc)}" data-q="${QN[r.q]}" data-n="${r.nd.join(' · ')}"/>`;});
+  d.rows.filter(r=>r.q==='B').sort((a,b)=>b.sc-a.sc).slice(0,6).forEach(r=>{
+    const px=X(r.s),py=Y(r.ci),fl=px>W-180;
+    s+=`<text x="${(fl?px-rad(r.mctr)-6:px+rad(r.mctr)+6).toFixed(1)}" y="${(py+4).toFixed(1)}"
+      fill="var(--ink)" font-size="12" font-weight="500" text-anchor="${fl?'end':'start'}">${r.kw}</text>`;});
+  s+=`<text x="${L+iw}" y="${H-5}" fill="var(--ink3)" font-size="11" text-anchor="end">한 달 검색량 →</text>
+      <text x="${L-9}" y="${T-7}" fill="var(--ink3)" font-size="11" text-anchor="end">↑ 경쟁강도</text></svg>`;
+  return s;
+}
+
+/* ---------- 04 축 카드 ---------- */
+function axCards(list){
+  const mx=Math.max(...list.map(c=>c.s));
+  return '<div class="ax">'+list.map(c=>{
+    const t=c.tone==='good'?'good':(c.tone==='bad'?'bad':'');
+    const g=c.tone==='good'?'g':(c.tone==='bad'?'b':'');
+    let sp='';
+    if(c.splits&&c.splits.length){
+      const lo=c.splits[0].ci,hi=c.splits[c.splits.length-1].ci;
+      sp=`<div class="split"><p class="split-h">하위 항목별로 보면 (경쟁강도, 검색 비중)</p>`+
+        c.splits.map(x=>`<div class="sp"><span class="sp-n">${x.name}</span>
+          <span class="sp-e">${x.ex.join(' · ')}</span>
+          <span class="sp-c ${x.ci===lo?'g':(x.ci===hi?'b':'')}">${x.ci}<small>검색 ${x.share}%</small></span></div>`).join('')+`</div>`;}
+    return `<div class="axc ${c.tone==='none'?'dim':''}">
+      <div>
+        <div class="axc-h"><h4>${c.name}</h4><span class="pill ${c.tone}">${c.lab}</span>
+          <span class="c">키워드 ${c.n} · 기회 ${c.b}</span></div>
+        <p class="say">${c.say}</p>
+        <p class="ex"><b>포함</b>${c.ex.join(' · ')}${c.n>c.ex.length?` 외 ${c.n-c.ex.length}개`:''}</p>
+        ${sp}
+      </div>
+      <div class="axm">
+        <div class="bar"><i class="${t}" style="width:${(c.s/mx*100).toFixed(1)}%"></i></div>
+        <p class="barlab">검색 ${fmt(c.s)} · 비중 ${c.share}%</p>
+        <div class="mgrid">
+          <div>경쟁강도<b class="${g}">${c.ci}</b></div>
+          <div>기회점수<b>${c.sc.toFixed(1)}</b></div>
+          <div>모바일 CTR<b>${c.mctr.toFixed(1)}%</b></div>
+          <div>광고단가<b>${fmt(c.cpc)}</b></div>
+        </div>
+      </div></div>`;}).join('')+'</div>';
+}
+
+/* ---------- 05 경로 리스트 ---------- */
+const PATH = {
+  md:{label:'MD 우선', role:'수요가 큰 시장입니다. <b>매대 구성과 SKU 기획</b>에 쓰세요. 진입 자체는 어렵습니다.'},
+  org:{label:'오가닉 진입', role:'등록 상품이 적어 <b>상품명과 상세페이지</b>만으로 뚫립니다. 광고비가 들지 않고 한번 오르면 유지됩니다.'},
+  ad:{label:'광고 진입', role:'입찰가가 싸고 클릭이 붙습니다. <b>상품수와 무관하게</b> 즉시 노출되지만, 광고를 끄면 사라집니다.'}
+};
+let pv = 'md';
+function gateText(d,k){
+  if(k==='md')  return '검색 ≥ 1,000 · 기회점수 순';
+  if(k==='org') return '상품수 ≤ 30,000 · 검색 200~3,000 · CTR ≥ 1%';
+  return `CPC ≤ ${fmt(d.gate.cpc)}원 · CTR ≥ ${d.gate.ctr}% · 검색 ≥ 500`;
+}
+function routes(d,kw){
+  const inM=d.md.some(r=>r.kw===kw), inO=d.org.some(r=>r.kw===kw), inA=d.ad.some(r=>r.kw===kw);
+  let s='';
+  if(inM) s+='<b class="m">MD</b>';
+  if(inO) s+='<b class="o">오가닉</b>';
+  if(inA) s+='<b class="a">광고</b>';
+  return (inM+inO+inA)>1 ? `<span class="route">${s}</span>` : '';
+}
+function pathTable(d){
+  const list=d[pv]||[];
+  if(!list.length) return `<div class="pt"><p class="pempty">조건을 통과한 키워드가 없습니다. 이 경로로는 진입할 자리가 없다는 뜻입니다.</p></div>`;
+  const hi={md:'s',org:'p',ad:'cpc'}[pv];
+  const cols=[['kw','키워드'],['s','검색량'],['p','상품수'],['ci','경쟁강도'],['mctr','모바일 CTR'],['cpc','CPC'],['nd','니즈']];
+  let h='<div class="pt"><div class="pscroll"><table><thead><tr>';
+  cols.forEach(([k,l])=>h+=`<th>${l}</th>`);
+  h+='</tr></thead><tbody>';
+  list.slice(0,14).forEach(r=>{
+    h+=`<tr><td class="k">${r.kw}${routes(d,r.kw)}</td>
+      <td class="${hi==='s'?'hi':''}">${fmt(r.s)}</td>
+      <td class="${hi==='p'?'hi':''}">${fmt(r.p)}</td>
+      <td>${r.ci}</td><td>${r.mctr.toFixed(2)}%</td>
+      <td class="${hi==='cpc'?'hi':''}">${fmt(r.cpc)}</td>
+      <td class="nd">${r.nd.slice(0,2).join(' · ')}</td></tr>`;});
+  return h+'</tbody></table></div></div>';
+}
+function refreshPaths(){
+  const d=DATA[cur];
+  document.getElementById('pgate').textContent=gateText(d,pv);
+  document.getElementById('prole').innerHTML=PATH[pv].role;
+  document.getElementById('ptable').innerHTML=pathTable(d);
+}
+
+/* ---------- 06 표 + 검색 ---------- */
+const esc = s => s.replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+function hl(text,term){
+  if(!term) return esc(text);
+  const i=text.toLowerCase().indexOf(term.toLowerCase());
+  if(i<0) return esc(text);
+  return esc(text.slice(0,i))+'<mark>'+esc(text.slice(i,i+term.length))+'</mark>'+esc(text.slice(i+term.length));
+}
+function filtered(d){
+  let r = qf==='ALL' ? d.rows.slice() : d.rows.filter(x=>x.q===qf);
+  const t=q.trim().toLowerCase();
+  if(t) r=r.filter(x=>x.kw.toLowerCase().includes(t)||x.cl.toLowerCase().includes(t)
+    ||x.nd.some(n=>n.toLowerCase().includes(t)));
+  r.sort((a,b)=>{const x=a[sk],y=b[sk];
+    return (typeof x==='string'?x.localeCompare(y,'ko'):x-y)*sd;});
+  return r;
+}
+function tableBody(d){
+  const rows=filtered(d);
+  if(!rows.length) return `<div class="empty">${q?`&ldquo;${esc(q)}&rdquo;에 해당하는 키워드가 없습니다.`:'이 구간에 해당하는 키워드가 없습니다.'}</div>`;
+  const mx=Math.max(...rows.map(r=>r.s),1);
+  const cols=[['kw','키워드'],['s','검색량'],['p','상품수'],['ci','경쟁강도'],['mctr','모바일 CTR'],['cpc','광고단가'],['cl','컨셉'],['sc','기회점수']];
+  let h='<div class="ts"><table class="kt"><thead><tr>';
+  cols.forEach(([k,l])=>h+=`<th data-s="${k}" data-a class="${sk===k?(sd>0?'up':'down'):''}">${l}</th>`);
+  h+='</tr></thead><tbody>';
+  rows.forEach(r=>h+=`<tr><td class="kw">${hl(r.kw,q.trim())}</td>
+    <td>${fmt(r.s)}</td><td>${fmt(r.p)}</td>
+    <td><span class="qd q${r.q}">${r.ci}</span></td>
+    <td>${r.mctr.toFixed(2)}%</td><td>${fmt(r.cpc)}</td>
+    <td class="tag">${r.cl}</td><td>${r.sc.toFixed(2)}</td></tr>`);
+  return h+'</tbody></table></div>';
+}
+function refreshTable(){
+  const d=DATA[cur];
+  document.getElementById('tbody').innerHTML=tableBody(d);
+  document.getElementById('tcnt').textContent=`${filtered(d).length} / ${d.rows.length}개`;
+  bindSort();
+}
+function bindSort(){
+  document.querySelectorAll('.kt th[data-s]').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.s;
+    if(sk===k) sd*=-1; else {sk=k; sd=(k==='kw'||k==='cl')?1:-1;}
+    refreshTable();});
+}
+
+/* ---------- render ---------- */
+function render(){
+  tabBtns.forEach((b,i)=>b.setAttribute('aria-selected',cats[i]===cur));
+  const d=DATA[cur],ins=INSIGHT[cur];
+  document.getElementById('view').innerHTML=`
+  <section>
+    <div class="sh"><h2><span>02</span>${cur}</h2>
+      <p>브랜드·규제·인증필요·오타를 걷어낸 뒤 남은 키워드 ${d.sum.n}개</p></div>
+    <dl class="kpi">
+      <div class="kp"><dt>진입 가능 검색량</dt><dd>${fmt(d.sum.s)}</dd></div>
+      <div class="kp"><dt>경쟁강도 중앙값</dt><dd>${d.sum.medC.toFixed(1)}</dd></div>
+      <div class="kp"><dt>상품수 중앙값</dt><dd>${fmt(Math.round(d.sum.medP))}</dd></div>
+      <div class="kp"><dt>모바일 CTR</dt><dd>${d.sum.mctr}<small>%</small></dd></div>
+      <div class="kp"><dt>광고단가 중앙값</dt><dd>${fmt(d.sum.cpc)}<small>원</small></dd></div>
+      <div class="kp"><dt>모바일 검색</dt><dd>${d.sum.mob}<small>%</small></dd></div>
+      <div class="kp"><dt>상위 20개 집중도</dt><dd>${d.sum.top20}<small>%</small></dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <div class="sh"><h2><span>03</span>먼저 걸러낸 것</h2>
+      <p>이 카테고리 전체 검색을 진입 가능 여부로 나눈 결과</p></div>
+    ${gateSection(d)}
+  </section>
+
+  <section>
+    <div class="sh"><h2><span>04</span>시장 지도</h2>
+      <p>점 크기는 모바일 클릭률 · 점선은 이 카테고리 중앙값</p></div>
+    <div class="panel" id="mapbox">${drawMap(d)}<div class="tip" id="tip"></div></div>
+    <div class="legend">
+      <span><i style="background:var(--good)"></i>기회 ${d.sum.qB}</span>
+      <span><i style="background:var(--warn)"></i>대시장·고경쟁 ${d.sum.qA}</span>
+      <span><i style="background:var(--info)"></i>니치 ${d.sum.qC}</span>
+      <span><i style="background:var(--bad)"></i>회피 ${d.sum.qD}</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><h2><span>05</span>어떤 컨셉으로 제품을 기획할 것인가</h2>
+      <p>진입 가능 키워드를 고민 · 성분 · 제형 · 대상 · 용도로 분류</p></div>
+    <p class="lead">${d.lead}</p>
+    ${axCards(d.cards)}
+    <p class="note">자체 브랜드의 제품 컨셉은 보통 <b>고민 하나 + 성분 하나 + 제형 하나</b>의 조합입니다. 사람들은 검색할 때 조건을 하나만 붙이므로 조합 자체의 경쟁강도는 잴 수 없지만, 각 축에서 비어 있는 것끼리 묶으면 겹치는 경쟁이 적은 컨셉이 됩니다. 성분·제형·대상·용도는 하위 항목이 많아 하나의 카드로 묶고, 카드 안에서 항목별 경쟁강도를 보여줍니다.</p>
+  </section>
+
+  <section>
+    <div class="sh"><h2><span>06</span>진입 경로별 키워드</h2>
+      <p>시장이 열려 있는 곳 · 광고 없이 뚫는 곳 · 광고로 사는 곳</p></div>
+    <p class="lead">진입로는 둘입니다. <b>오가닉</b>은 등록 상품이 적어야 뚫리고, <b>광고</b>는 상품이 아무리 많아도 입찰가만 낮으면 들어갑니다. 상품수만 보면 광고로 열려 있는 자리를 통째로 놓칩니다. 여러 경로에 걸린 키워드는 이름 옆에 배지로 표시했습니다.</p>
+    <div class="pbar">
+      <span class="plab">진입 경로</span>
+      <div class="psegs" id="psegs">${['md','org','ad'].map(x=>`<button data-p="${x}" aria-pressed="${pv===x}">${PATH[x].label}<i>${(d[x]||[]).length}</i></button>`).join('')}</div>
+      <span class="pgate" id="pgate"></span>
+    </div>
+    <p class="prole" id="prole"></p>
+    <div id="ptable"></div>
+    <p class="note">세 경로는 <b>실행 주체가 다릅니다.</b> MD 우선은 발주 회의에서, 오가닉 진입은 상품 등록 화면에서, 광고 진입은 광고 계정에서 씁니다. 배지가 둘 이상 붙은 키워드는 상품도 적고 광고도 싼 자리라 우선순위 1번입니다.</p>
+  </section>
+
+  <section>
+    <div class="sh"><h2><span>07</span>키워드 전체</h2>
+      <p>키워드 · 컨셉 · 고민·성분으로 검색되며, 열 제목을 누르면 정렬됩니다</p></div>
+    <div class="tbar">
+      <div class="search ${q?'has':''}" id="sbox">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="sinput" type="search" placeholder="예: 약산성, 맥주효모, 앰플, 쿨링" value="${esc(q)}"
+          autocomplete="off" aria-label="키워드 검색">
+        <button class="clr" id="sclr" aria-label="검색어 지우기">×</button>
+      </div>
+      <div class="segs" id="segs">${['B','A','C','D','ALL'].map(x=>`<button data-q="${x}" aria-pressed="${qf===x}">${x==='ALL'?'전체':QN[x]}</button>`).join('')}</div>
+      <span class="cnt" id="tcnt"></span>
+    </div>
+    <div class="tw" id="tbody"></div>
+  </section>
+
+  <section>
+    <div class="sh"><h2><span>08</span>무엇을 할 것인가</h2></div>
+    <div class="verdict ${ins.warn?'warn':''}">${ins.verdict}</div>
+    <div class="two-ins">
+      <div class="ic"><h3>상품 기획·소싱</h3><p class="role">어떤 상품을 넣을지</p>
+        <ul>${ins.md.map(([a,b])=>`<li>${a}<em>${b}</em></li>`).join('')}</ul></div>
+      <div class="ic"><h3>마케팅·광고</h3><p class="role">어디에 예산을 쓸지</p>
+        <ul>${ins.mk.map(([a,b])=>`<li>${a}<em>${b}</em></li>`).join('')}</ul></div>
+    </div>
+  </section>
+
+  <section>
+    <details class="cav"><summary>이 수치를 믿기 전에 — 한계 7가지</summary>
+      <div class="cavbody"><ol>
+        <li><b>규제 판단은 참고용입니다.</b> 의약품·질환명·탈모 표방·금지 표현 분류는 키워드 문자열로 기계적으로 나눈 것이고, 실제 상품명·광고 표현이 허용되는지는 법무 검토와 광고 자율심의로 확인하셔야 합니다. 특히 &lsquo;지루성&rsquo;처럼 질환을 연상시키는 단어와, 모발 색을 바꾸는 염색샴푸(염모 기능성 해당 여부)는 경계가 애매합니다.</li>
+        <li><b>브랜드 비중은 이번엔 착시가 아닙니다.</b> 가구 때는 한 키워드를 빼면 비중이 반토막 났지만, 여기서는 1위 키워드를 빼도 샴푸 70.1% → 68.4%로 거의 그대로입니다. 다만 브랜드별 점유율 순위는 여전히 이 데이터로 낼 수 없어 넣지 않았습니다.</li>
+        <li><b>진입 가능 키워드 표본이 작습니다.</b> 걸러내고 나면 샴푸 63개, 탈모케어 26개, 두피케어 32개입니다. 키워드 1~2개짜리 컨셉에는 &lsquo;표본 부족&rsquo;을 달았습니다. 샴푸는 검색 1,000회 이상인데 상품수가 빠진 일반 키워드 10개(비듬샴푸추천, 두피가려움샴푸 등, 합계 17,110회)가 제외된 상태입니다.</li>
+        <li><b>세 파일은 키워드가 겹칩니다.</b> &lsquo;샴푸&rsquo;(79,300회)는 세 파일 모두에, 샴푸추천·약산성샴푸·비듬샴푸는 샴푸와 탈모케어 양쪽에 있습니다. 카테고리 간 검색량을 더하면 중복 계산됩니다.</li>
+        <li><b>2026년 8월 한 달 스냅샷입니다.</b> 가을 탈모 성수기(9~10월) 직전이라 탈모·두피 검색량은 성수기보다 낮게 잡혔을 수 있습니다.</li>
+        <li><b>CPC는 실제 지불액이 아니라</b> &ldquo;최하위 노출 광고의 최고입찰가&rdquo;입니다. 광고 슬롯 하단의 최소 비용에 가깝고, CTR·CPC가 진입 난이도를 낮춘다는 건 이 데이터로 검증된 사실이 아니라 추론입니다.</li>
+        <li><b>매출·전환율·가격·리뷰 데이터가 없습니다.</b> 뷰티는 리뷰 수와 재구매가 순위를 좌우하는 카테고리라, 경쟁강도가 낮아도 1페이지가 리뷰 수천 개로 막혀 있을 수 있습니다. 진입 전 직접 확인하세요.</li>
+      </ol>
+      <p class="formula">기회점수 = 0.40×수요(검색량 백분위) + 0.40×공급부족(상품수 백분위 역순) + 0.20×반응(모바일 CTR 백분위), 진입 가능 키워드 안에서 카테고리별 백분위로 계산해 10점 환산. 묶음 카드(성분·제형·대상·용도)의 경쟁강도는 하위 항목 상품수 합 ÷ 검색수 합으로 계산했습니다.</p>
+      </div></details>
+  </section>`;
+
+  refreshPaths();
+  document.getElementById('psegs').onclick=e=>{const b=e.target.closest('button');
+    if(b){pv=b.dataset.p;[...e.currentTarget.children].forEach(x=>x.setAttribute('aria-pressed',x===b));refreshPaths();}};
+
+  refreshTable();
+  document.getElementById('segs').onclick=e=>{const b=e.target.closest('button');
+    if(b){qf=b.dataset.q;[...e.currentTarget.children].forEach(x=>x.setAttribute('aria-pressed',x===b));refreshTable();}};
+  const si=document.getElementById('sinput'),sb=document.getElementById('sbox');
+  si.addEventListener('input',()=>{q=si.value;sb.classList.toggle('has',!!q);refreshTable();});
+  si.addEventListener('keydown',e=>{if(e.key==='Escape'){q='';si.value='';sb.classList.remove('has');refreshTable();}});
+  document.getElementById('sclr').onclick=()=>{q='';si.value='';sb.classList.remove('has');refreshTable();si.focus();};
+
+  const box=document.getElementById('mapbox'),tip=document.getElementById('tip');
+  box.addEventListener('mousemove',e=>{
+    const c=e.target.closest('.dot');
+    if(!c){tip.style.opacity=0;return;}
+    const o=c.dataset,r=box.getBoundingClientRect();
+    tip.innerHTML=`<b>${o.k}</b>검색 ${o.s} · 상품 ${o.p}<br>경쟁강도 ${o.c} · CTR ${o.m}%<br>광고단가 ${o.a}원<br><span style="opacity:.65">${o.q} · ${o.n}</span>`;
+    tip.style.opacity=1;
+    let x=e.clientX-r.left+16,y=e.clientY-r.top+16;
+    if(x>r.width-262)x=e.clientX-r.left-256;
+    if(y>r.height-124)y=e.clientY-r.top-124;
+    tip.style.left=x+'px';tip.style.top=y+'px';});
+  box.addEventListener('mouseleave',()=>tip.style.opacity=0);
+}
+
+const tabsEl=document.getElementById('tabs');
+const tabBtns=[];
+cats.forEach(c=>{const b=document.createElement('button');
+  b.setAttribute('role','tab');
+  b.innerHTML=c+'<i>'+DATA[c].sum.n+'</i>';
+  b.onclick=()=>{cur=c;qf='B';sk='sc';sd=-1;q='';pv='md';renderTop();render();};
+  tabsEl.appendChild(b); tabBtns.push(b);});
+renderTop();
+render();
+</script>
+</body>
+</html>

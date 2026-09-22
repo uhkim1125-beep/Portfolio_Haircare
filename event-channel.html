@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>뷰티 / 카카오톡딜 행사채널 분석</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#EAEBE7;--card:#F7F7F5;--sunk:#E1E2DD;--ink:#15171A;--ink2:#464B52;--mute:#787E86;
+  --line:#C3C6C1;--hair:#D9DBD6;--accent:#16457A;--teal:#12654F;--rose:#9E3030;--ochre:#8A6314}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#111316;--card:#191C20;--sunk:#0B0D10;--ink:#E8EAEC;--ink2:#AFB5BC;--mute:#7C838B;
+  --line:#2C3138;--hair:#22262C;--accent:#6E9BD6;--teal:#4FC0A0;--rose:#E0757A;--ochre:#D5A748}}
+:root[data-theme="dark"]{--paper:#111316;--card:#191C20;--sunk:#0B0D10;--ink:#E8EAEC;--ink2:#AFB5BC;
+  --mute:#7C838B;--line:#2C3138;--hair:#22262C;--accent:#6E9BD6;--teal:#4FC0A0;--rose:#E0757A;--ochre:#D5A748}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;
+  line-height:1.62;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;font-size:15px}
+.wrap{max-width:840px;margin:0 auto;padding:52px 22px 90px}
+a{color:inherit}
+.kicker{font-size:12.5px;color:var(--mute);margin-bottom:10px}
+h1{margin:0 0 12px;font-size:clamp(25px,4.3vw,35px);font-weight:600;letter-spacing:-.025em;line-height:1.24}
+.sub{margin:0;font-size:15px;color:var(--ink2);max-width:62ch}
+.byline{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:6px 22px;font-size:12.5px;color:var(--mute)}
+.headline{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--accent);
+  padding:24px 26px;margin:38px 0 12px}
+.headline .lbl{font-size:12.5px;color:var(--mute);margin-bottom:12px}
+.headline p{margin:0 0 14px;font-size:18.5px;line-height:1.52;letter-spacing:-.015em;font-weight:500}
+.headline p:last-of-type{margin-bottom:0}
+.rec{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);margin-top:18px}
+.rec div{background:var(--card);padding:12px 14px}
+.rec b{display:block;font-size:16.5px;font-weight:600;letter-spacing:-.02em}
+.rec span{display:block;font-size:11.5px;color:var(--mute);margin-top:1px}
+.caption{font-size:12.5px;color:var(--mute);margin:0 0 40px}
+h2{margin:52px 0 6px;font-size:20px;font-weight:600;letter-spacing:-.02em}
+h2 .n{color:var(--mute);font-weight:400;margin-right:9px}
+h3{margin:32px 0 5px;font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+p{margin:0 0 13px}
+.lead{color:var(--ink2);max-width:66ch}
+.small{font-size:12.5px;color:var(--mute);max-width:70ch}
+.qs{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:16px}
+.q{background:var(--card);padding:14px 16px;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start}
+.q i{font-style:normal;color:var(--mute);font-size:13px;padding-top:2px}
+.q b{font-weight:500}
+.q em{font-style:normal;display:block;font-size:13px;color:var(--mute);margin-top:2px}
+.find{border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:22px 0}
+.find b{display:block;font-size:16.5px;font-weight:600;letter-spacing:-.015em;margin-bottom:5px}
+.find p{margin:0;font-size:14px;color:var(--ink2)}
+.find.flip{border-color:var(--rose)}
+.find.win{border-color:var(--teal)}
+.viz{background:var(--card);border:1px solid var(--line);padding:16px 18px;margin:16px 0 8px}
+.vleg{font-size:12px;color:var(--mute);margin-top:12px;padding-top:10px;border-top:1px solid var(--hair);
+  display:flex;flex-wrap:wrap;gap:16px}
+.sw{display:inline-block;width:15px;height:9px;border-radius:2px;vertical-align:1px;margin-right:5px}
+.grow{display:grid;grid-template-columns:106px 1fr 88px;gap:11px;align-items:center;padding:6px 0}
+.gname{font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gname.hl{color:var(--ink);font-weight:500}
+.gbar{display:flex;height:20px;border-radius:2px;overflow:hidden;background:var(--sunk)}
+.gseg{height:100%}
+.gval{font-size:12.5px;color:var(--mute);text-align:right;white-space:nowrap;line-height:1.35}
+@media(max-width:560px){.grow{grid-template-columns:82px 1fr 72px;gap:7px}}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:14px 0 6px}
+th{text-align:left;font-weight:500;color:var(--ink2);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--hair)}
+th.r,td.r{text-align:right}
+.g{color:var(--teal);font-weight:600}.b2{color:var(--rose)}
+.tw{overflow-x:auto}
+tr.win td{background:rgba(18,101,79,.07)}
+.tag{display:inline-block;font-size:10.5px;padding:0 5px;border-radius:2px;border:1px solid currentColor;color:var(--teal)}
+.wall{background:var(--card);border:1px solid var(--line);padding:16px 18px;margin:16px 0}
+.wrow{display:grid;grid-template-columns:86px 1fr 92px;gap:11px;align-items:center;padding:6px 0;font-size:13px}
+.wlab{color:var(--ink2);white-space:nowrap}
+.wt{height:19px;background:var(--sunk);border-radius:2px;position:relative}
+.wf{position:absolute;inset:0 auto 0 0;border-radius:2px}
+.wv{text-align:right;font-size:12.5px;color:var(--mute);white-space:nowrap}
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:16px 0}
+@media(max-width:640px){.pairs{grid-template-columns:1fr}}
+.pane{background:var(--card);border:1px solid var(--line);padding:14px 16px}
+.pane h4{margin:0 0 3px;font-size:14px;font-weight:600}
+.pane .cap{margin:0 0 12px;font-size:12px;color:var(--mute);line-height:1.45}
+.qrow{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;padding:4px 0;font-size:12.5px}
+.qlab{color:var(--ink2);white-space:nowrap;min-width:86px}
+.qt{height:15px;background:var(--sunk);border-radius:2px;position:relative;min-width:18px}
+.qf{position:absolute;inset:0 auto 0 0;border-radius:2px}
+.qv{color:var(--mute);font-size:12px;min-width:42px;text-align:right}
+.prop{border:1px solid var(--line);background:var(--card);margin:18px 0}
+.prop.dim{background:var(--sunk)}
+.phead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  padding:12px 16px;border-bottom:1px solid var(--hair)}
+.phead b{font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.phead span{font-size:11.5px;color:var(--mute)}
+.pbody{padding:14px 16px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px 22px}
+.pgrid>div{font-size:13.5px;color:var(--ink2)}
+.pgrid em{font-style:normal;display:block;font-size:11.5px;color:var(--mute);margin-bottom:1px}
+.pgrid b{font-size:17px;font-weight:600;color:var(--teal);letter-spacing:-.02em}
+.pnote{margin:14px 0 0;font-size:12.5px;color:var(--mute);line-height:1.6}
+.limit{background:var(--sunk);border:1px solid var(--line);padding:18px 20px;margin:18px 0}
+.limit ul{margin:0;padding-left:18px}
+.limit li{margin-bottom:7px;font-size:13.5px;color:var(--ink2)}
+.limit li b{color:var(--ink);font-weight:500}
+.use{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:16px}
+.ucard{background:var(--card);padding:16px 18px}
+.ucard b{display:block;font-size:14.5px;font-weight:600;margin-bottom:5px}
+.ucard p{margin:0;font-size:13.5px;color:var(--ink2)}
+.quote{border-left:2px solid var(--line);padding-left:13px;margin-top:9px;font-size:13.5px;color:var(--ink2)}
+details{margin-top:24px;border:1px solid var(--line);background:var(--card)}
+summary{padding:13px 16px;cursor:pointer;font-size:14px;font-weight:500;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▸ ";color:var(--mute)}
+details[open] summary::before{content:"▾ "}
+.dbody{padding:0 16px 16px;border-top:1px solid var(--hair)}
+.dt{min-width:780px;font-size:12.5px}
+.dt th{position:sticky;top:0;background:var(--card);z-index:2;cursor:pointer}
+.dt th.up::after{content:" ▲";font-size:8px}.dt th.dn::after{content:" ▼";font-size:8px}
+.pn{display:inline-block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  vertical-align:bottom;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
+.bd{font-size:11px;color:var(--mute)}
+footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+.obar{display:grid;grid-template-columns:minmax(0,210px) 1fr 70px;gap:11px;align-items:center;padding:6px 0;font-size:13px}
+.obar .on{color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.obar .on small{display:block;font-size:11px;color:var(--mute)}
+.obar .ot{height:20px;background:var(--sunk);border-radius:2px;position:relative}
+.obar .of{position:absolute;inset:0 auto 0 0;border-radius:2px}
+.obar .ov{text-align:right;color:var(--ink2);font-size:12.5px}
+.obar.sum{border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+@media(max-width:560px){.obar{grid-template-columns:120px 1fr 54px;gap:7px}}
+.drow{display:grid;grid-template-columns:150px 1fr 110px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--hair)}
+.dname{font-size:13px}.dname em{display:block;font-style:normal;font-size:11px;color:var(--mute)}
+.dtrack{position:relative;height:20px;background:var(--sunk);border-radius:2px}
+.dzero{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line)}
+.dfill{position:absolute;top:3px;bottom:3px;border-radius:2px}
+.dval{font-size:12px;color:var(--ink2);text-align:right}
+@media(max-width:600px){.drow{grid-template-columns:104px 1fr 78px;gap:8px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="kicker">뷰티 / 카카오톡딜 행사채널 분석</div>
+<h1>카카오톡딜 행사에서<br>헤어케어는 어디서, 무엇이 팔리나</h1>
+<p class="sub">향수/바디/헤어 카테고리 106개 딜을 수집해, 헤어케어 상품이 판매를 만들 수 있는 자리와 구성을 역산했습니다.</p>
+<div class="byline">
+  <span>수집 2026-09-22 · 카카오톡딜 뷰티 &gt; 향수/바디/헤어</span>
+  <span>대표 딜 6개 · 인기 목록 100개</span>
+  <span>수집 · 정제 · 분석 · 시각화 직접 수행</span>
+</div>
+
+<div class="headline">
+  <div class="lbl">결론</div>
+  <p>판매는 상단 <b>대표 딜 6개</b>에 몰려 있습니다. 대표 딜의 실시간 주문(2,140건)이
+     아래 목록 100개를 모두 합친 것(841건)의 <b>2.5배</b>이고, 그 6개 중 <b>4개가 헤어</b>입니다.</p>
+  <p>헤어케어가 승부할 곳은 목록이 아니라 대표 딜이며, 그 자리에서 가장 많이 팔린 건 샴푸가 아니라
+     <b>2~3만원대 헤어 에센스 기획세트</b>였습니다.</p>
+  <p style="font-size:14px;font-weight:400;color:var(--ink2);line-height:1.62;margin-top:16px">
+  수집부터 분석까지 AI로 처리했습니다. 매일 아침 구좌가 자동으로 수집되고, 분석 기준은 대화로 바꿉니다.
+  "탈모샴푸만 따로 보여줘"나 "경쟁 브랜드별로 다시 묶어줘" 같은 요청이 즉시 반영됩니다.
+  표를 옮겨 적고 피벗을 돌리는 시간이 사라지므로, 제가 벤더 미팅을 하는 동안에도 데이터는 쌓입니다.
+  같은 방법을 가구(오늘의집)에도 적용했고, 두 채널 모두에서 "할인율은 판매를 가르지 않는다"는 같은 결론이 나왔습니다.</p>
+  <div class="rec">
+    <div><b>대표 딜 슬롯</b><span>노릴 자리</span></div>
+    <div><b>헤어 에센스 기획</b><span>상품</span></div>
+    <div><b>2~3만원대</b><span>최종가</span></div>
+    <div><b>본품 2 + 미니 + 증정</b><span>구성</span></div>
+  </div>
+</div>
+<p class="caption">아래는 이 결론에 이른 과정입니다.</p>
+
+<h2><span class="n">01</span>왜 만들었나</h2>
+<p class="lead">카카오톡딜은 누적 판매량과 실시간 주문 수가 화면에 공개되는 드문 채널입니다.
+경쟁사가 무엇을, 얼마에, 어떤 구성으로 팔아 실제로 몇 개를 팔았는지가 그대로 보입니다.
+이 정보를 매일 구조화하면 헤어케어 MD가 매주 답해야 하는 질문에 근거를 붙일 수 있습니다.</p>
+<div class="qs">
+  <div class="q"><i>Q1</i><div><b>이 채널에서 판매는 어디서 일어나는가</b>
+    <em>상단 대표 딜과 아래 목록 중 어디에 제안해야 하는가</em></div></div>
+  <div class="q"><i>Q2</i><div><b>헤어케어 중 무엇이 팔리는가</b>
+    <em>샴푸, 트리트먼트, 에센스 중 어디에 기회가 있는가</em></div></div>
+  <div class="q"><i>Q3</i><div><b>가격·할인·구성 중 무엇이 실제로 작동하는가</b>
+    <em>1+1, 증정, 대용량, 효능 문구를 검증한다</em></div></div>
+</div>
+
+<h2><span class="n">02</span>데이터와 한계</h2>
+<p class="lead">두 종류의 판매 신호를 썼습니다. 상단 <b>대표 딜 6개</b>는 "지금까지 총 N개 팔렸어요"로 누적 판매량이 공개됩니다.
+아래 <b>인기 목록 100개</b>는 카카오가 인기순으로 정렬한 순위와, 상위 상품에 한해 실시간 주문 수가 보입니다.
+헤어·바디·향수 구분은 상품명을 읽고 직접 분류했습니다.</p>
+<div class="limit"><ul>
+  <li><b>하루 단면입니다.</b> 2026-09-22 한 시점의 화면이라 딜 기간 전체의 성과는 아닙니다.</li>
+  <li><b>대표 딜과 목록의 "주문 중" 숫자가 같은 방식으로 집계된다는 보장은 없습니다.</b> 표기는 같지만 비교는 규모 감을 잡는 용도로 읽어야 합니다.</li>
+  <li><b>목록 순위는 카카오의 인기 정렬입니다.</b> 실시간 주문 수와의 상관이 −0.84로 매우 높아 판매 순위로 읽었지만, 정렬 기준이 공개된 것은 아닙니다.</li>
+  <li><b>대표 딜 중 려 루트젠은 딜 시작 직후</b>(6일 남음)라 누적 판매 43개를 실패로 판단하지 않았습니다.</li>
+</ul></div>
+
+<h2><span class="n">03</span>먼저, 판매가 일어나는 자리</h2>
+<div class="find">
+  <b>대표 딜 6개가 목록 100개보다 2.5배 더 팔고 있다</b>
+  <p>실시간 주문 수로 비교했습니다. 대표 딜 헤드앤숄더 한 상품(1,095건)이 목록 100개 전체(841건)보다 많습니다.
+  목록 100개 중 주문 수가 표시되는 상품은 28개뿐이고, 가장 높은 것도 152건입니다.</p>
+</div>
+<div class="viz"><div id="ord"></div>
+  <div class="vleg">
+    <span><span class="sw" style="background:var(--teal)"></span>대표 딜 · 헤어</span>
+    <span><span class="sw" style="background:var(--line)"></span>대표 딜 · 바디</span>
+    <span><span class="sw" style="background:var(--rose)"></span>목록 100개 합계</span>
+  </div>
+</div>
+
+<div class="find win">
+  <b>그 대표 딜의 주인공이 헤어다</b>
+  <p>6개 중 4개가 헤어입니다. 대표 딜 누적 판매 79,045개 중 헤어가 34,367개로 43%입니다.
+  아래 목록에서는 헤어가 32개로 바디와 비슷한 비중인데, 대표 자리는 채널이 헤어에 더 많이 주고 있습니다.</p>
+</div>
+<div class="tw"><table>
+<thead><tr><th>대표 딜</th><th>종류</th><th class="r">최종가</th><th class="r">할인율</th><th class="r">누적 판매</th><th class="r">주문 중</th></tr></thead>
+<tbody id="hero"></tbody></table></div>
+<p class="small">누적 판매 1위는 실크테라피 에센스 기획세트로 27,006개입니다. 헤어 에센스 두 상품(실크테라피, 이븐로엘)이
+합쳐 31,018개로 헤어 대표 딜 판매의 90%를 만들었습니다. 샴푸는 헤드앤숄더가 마감 하루 전 주문 1,095건으로 급증 중이고,
+려는 이제 막 시작했습니다.</p>
+
+<h2><span class="n">04</span>헤어 32개를 전수로</h2>
+<p class="lead">목록에 올라온 헤어 상품 32개(헤어·바디 모음 4개 포함)를 하나씩 분류하고, 무엇이 순위를 가르는지 확인했습니다.</p>
+
+<div class="tw"><table>
+<thead><tr><th>세부 종류</th><th class="r">상품 수</th><th class="r">상위 30위 진입</th><th class="r">중앙 순위</th><th>판단</th></tr></thead>
+<tbody>
+<tr><td>샴푸</td><td class="r">15</td><td class="r">4</td><td class="r">59위</td><td class="b2">가장 붐비고 가장 약함</td></tr>
+<tr><td>에센스·오일·앰플</td><td class="r">6</td><td class="r">2</td><td class="r">55위</td><td>목록에선 평범, 대표 딜에선 1위</td></tr>
+<tr><td>트리트먼트·헤어팩</td><td class="r">5</td><td class="r">1</td><td class="r">43위</td><td>리뷰 합계 최다(10,146건)</td></tr>
+<tr><td>헤어·바디 모음</td><td class="r">4</td><td class="r g">4</td><td class="r g">18위</td><td class="g">전부 상위권</td></tr>
+<tr><td>기타</td><td class="r">2</td><td class="r">0</td><td class="r">60위</td><td></td></tr>
+</tbody></table></div>
+<p class="small">샴푸가 15개로 절반인데 상위 30위에는 4개뿐입니다. 그중 탈모 문구를 단 상품이 12개로,
+탈모샴푸는 이미 포화된 자리입니다. 헤어·바디 모음 4개는 모두 샴푸·바디워시·로션을 골라 담는 1만원대 대용량 모음전이었습니다.</p>
+
+<div class="find flip">
+  <b>가격도, 할인율도, 1+1도 순위와 관계가 없었다</b>
+  <p>헤어 32개로 각 특성과 목록 순위의 관계를 계산했습니다. 순위를 가른 건 누적 리뷰, 즉 이미 검증된 상품이냐 하나뿐이었습니다.
+  가구(오늘의집) 분석에서도 할인율은 판매와 무관했는데, 채널과 카테고리가 달라도 같은 결과입니다.</p>
+</div>
+<div class="viz" style="padding-top:8px">
+  <p class="small" style="margin:4px 0 10px">오른쪽으로 길수록 순위를 올리는 특성, 왼쪽이면 오히려 내리는 특성입니다. 가운데 근처는 관계없음.</p>
+  <div id="drv"></div>
+</div>
+
+<div class="find flip">
+  <b>"모발 빠짐 81% 개선" 같은 효능 수치 문구는 오히려 하위권이었다</b>
+  <p>상품명에 효능 수치를 넣은 5개가 모두 55위 아래였습니다(55·59·69·83·99위). 상위 30위 안에는 하나도 없습니다.
+  표본이 5개라 단정할 수는 없지만, 수치 문구가 클릭이나 주문으로 이어진다는 근거는 찾지 못했습니다.</p>
+</div>
+
+<h2><span class="n">05</span>그래서 무엇을 제안할 것인가</h2>
+<p class="lead">대표 딜과 목록은 역할이 다릅니다. 대표 딜은 물량을 만드는 자리이고, 목록은 순위를 올릴 리뷰를 쌓는 자리입니다.</p>
+
+<div class="prop">
+  <div class="phead"><b>제안 A · 헤어 에센스 기획세트로 대표 딜 제안</b><span>1순위</span></div>
+  <div class="pbody"><div class="pgrid">
+    <div><em>구성</em>에센스 본품 2개 + 미니 1개 + 증정</div>
+    <div><em>목표 최종가</em><b>29,900원</b></div>
+    <div><em>할인율</em>정가 6만원대 기준 50% 안팎</div>
+    <div><em>근거</em>같은 구성의 실크테라피가 29,900원에 27,006개</div>
+  </div>
+  <p class="pnote">이븐로엘 노워시 헤어에센스도 19,800원 단품으로 4,012개가 팔렸습니다. 헤어 대표 딜 판매의 90%가 에센스에서 나왔고,
+  목록에서는 에센스가 6개뿐이라 경쟁도 적습니다. 대표 딜은 라이브나 1일 특가와 묶여 있어 방송 일정 협의가 같이 필요합니다.</p></div>
+</div>
+
+<div class="prop">
+  <div class="phead"><b>제안 B · 대용량 트리트먼트로 목록 상시 딜</b><span>2순위</span></div>
+  <div class="pbody"><div class="pgrid">
+    <div><em>구성</em>트리트먼트 1000ml 단품 또는 1+1</div>
+    <div><em>목표 최종가</em><b>11,900~14,900원</b></div>
+    <div><em>역할</em>리뷰 적립 → 순위 상승</div>
+    <div><em>근거</em>에트투스 트리트먼트 1000ml 11,900원, 리뷰 8,939건, 9위</div>
+  </div>
+  <p class="pnote">같은 가격대의 아우페 트리트먼트 1+1(14,900원)은 리뷰 16건에 69위였습니다. 가격과 구성이 같아도 리뷰가 순위를 갈랐습니다.
+  목록 딜은 매출보다 리뷰를 쌓는 단계로 보고, 쌓인 리뷰를 대표 딜 제안의 근거로 씁니다.</p></div>
+</div>
+
+<div class="prop dim">
+  <div class="phead"><b>제안하지 않을 것</b><span>근거</span></div>
+  <div class="pbody"><div class="pgrid">
+    <div><em>탈모샴푸 단품</em>샴푸 15개 중 탈모 문구 12개, 포화</div>
+    <div><em>효능 수치 문구 의존</em>5개 모두 55위 아래</div>
+    <div><em>할인율 경쟁</em>순위와 관계없음</div>
+  </div></div>
+</div>
+
+<h3>협의해야 할 것</h3>
+<div class="tw"><table>
+<thead><tr><th>대상</th><th>내용</th><th>근거로 쓸 숫자</th></tr></thead>
+<tbody>
+<tr><td>채널 MD</td><td>헤어 에센스 기획세트로 대표 딜·라이브 슬롯 제안</td><td>대표 딜 6개 중 헤어 4개, 에센스가 헤어 판매의 90%</td></tr>
+<tr><td>상품팀</td><td>에센스 본품 2 + 미니 구성 가능 여부, 증정품 선정</td><td>실크테라피 29,900원 구성</td></tr>
+<tr><td>마케팅</td><td>목록 딜 리뷰 적립 이벤트</td><td>목록 순위와 리뷰 상관 −0.59, 유일한 유의 변수</td></tr>
+</tbody></table></div>
+
+<h2><span class="n">06</span>실무에서 어떻게 쓰는가</h2>
+<div class="use">
+  <div class="ucard"><b>채널 제안</b>
+    <p>대표 딜의 실판매 숫자로 슬롯을 요청합니다. 감이 아니라 경쟁사 실적으로 이야기합니다.</p>
+    <div class="quote">"현재 헤어 대표 딜 판매의 90%가 에센스 기획세트입니다. 저희 에센스를 같은 가격대 구성으로 라이브 슬롯에 넣어 주십시오."</div>
+  </div>
+  <div class="ucard"><b>내부 설득</b>
+    <p>할인율을 더 태우자는 요청에 데이터로 답합니다.</p>
+    <div class="quote">"목록 순위는 할인율과 무관했습니다. 할인 예산을 늘리는 대신 리뷰 적립에 쓰는 편이 순위에 효과적입니다."</div>
+  </div>
+  <div class="ucard"><b>주간 루틴</b>
+    <p>매일 같은 양식으로 수집하면 대표 딜 누적 판매가 날짜별로 쌓여, 딜 하나의 일별 판매 곡선까지 볼 수 있습니다.</p>
+  </div>
+</div>
+
+<h2><span class="n">07</span>다음 단계</h2>
+<p class="lead">카카오톡딜은 누적 판매량이 공개되므로 <b>이틀만 수집해도 하루 판매량</b>이 나옵니다. 오늘의집처럼 2주를 기다릴 필요가 없습니다.
+려 루트젠처럼 막 시작한 딜의 판매 속도를 추적하면, 딜 오픈 후 며칠 만에 승패가 갈리는지도 알 수 있습니다.</p>
+<p class="lead">"목록에서 리뷰를 쌓은 상품이 대표 딜로 올라간다"는 가설은 아직 검증하지 못했습니다. 한 달치 수집으로 목록 상품이 대표 딜로 옮겨 가는지를 추적할 계획입니다.</p>
+
+<details>
+  <summary>수집 원본 데이터 106건</summary>
+  <div class="dbody">
+    <p class="small" style="margin:12px 0">머리글을 누르면 정렬됩니다. 대표 딜은 순위 대신 "대표"로 표시했습니다.</p>
+    <div class="tw"><table class="dt" id="raw"><thead><tr>
+      <th data-k="rank">순위</th><th data-k="nm">상품</th><th data-k="c">분류</th>
+      <th data-k="list" class="r">정가</th><th data-k="fin" class="r">최종가</th>
+      <th data-k="rev" class="r">리뷰</th><th data-k="ord" class="r">주문 중</th><th data-k="sold" class="r">누적 판매</th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+</details>
+
+<footer>출처 카카오톡딜 · 2026-09-22 수집 · 가격과 수치는 수집 시점 화면 기준</footer>
+</div>
+
+<script>
+const D = [{"g": "대표", "rank": 0, "nm": "실크테라피 퍼펙트 에센스 150ml 2개+60ml+증정", "c": "헤어", "list": 60800, "fin": 27810, "rev": null, "ord": 681, "sold": 27006, "sub": "에센스·오일·앰플"}, {"g": "대표", "rank": 0, "nm": "일리윤 세라마이드 아토로션 1828ml+50ml+증정", "c": "바디", "list": 86200, "fin": 50220, "rev": null, "ord": 56, "sold": 26414, "sub": ""}, {"g": "대표", "rank": 0, "nm": "려 루트젠 샴푸 515ml+리필+두피 에센스+괄사+증정", "c": "헤어", "list": 80600, "fin": 52640, "rev": null, "ord": 21, "sold": 43, "sub": "샴푸"}, {"g": "대표", "rank": 0, "nm": "헤드앤숄더 샴푸 850ml 3개+미니샴푸 외 트리트먼트", "c": "헤어", "list": 56700, "fin": 26300, "rev": null, "ord": 1095, "sold": 3306, "sub": "샴푸"}, {"g": "대표", "rank": 0, "nm": "이븐로엘 프로틴 노워시 헤어에센스 앰플 120ml", "c": "헤어", "list": 59000, "fin": 19800, "rev": null, "ord": 74, "sold": 4012, "sub": "에센스·오일·앰플"}, {"g": "대표", "rank": 0, "nm": "플루 시그니처 바디스크럽 1+1. 저자극 각질케어", "c": "바디", "list": 29800, "fin": 13800, "rev": null, "ord": 213, "sold": 18264, "sub": ""}, {"g": "목록", "rank": 1, "nm": "에스더버니X럽센트 생화향 스크럽워시/바디워시 500ml (+100ml 미니어처&파우치 증정) 외 로션/핸드워시/미스트 골라담기", "c": "핸드", "list": 25900, "fin": 9900, "rev": 23, "ord": 152, "sold": null, "sub": ""}, {"g": "목록", "rank": 2, "nm": "[더블기획] 여성맞춤 볼륨 탈모 증상케어 샴푸 2입기획 (515ml*2)(+샴.트 200ml+커피 증정)", "c": "헤어", "list": 45800, "fin": 29760, "rev": 187, "ord": 52, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 3, "nm": "온더바디 코튼풋 발을씻자 풋샴푸 레몬 385ml 용기 2개+리필 500ml 1개 외 구성", "c": "바디", "list": 25900, "fin": 13900, "rev": 2988, "ord": 61, "sold": null, "sub": ""}, {"g": "목록", "rank": 4, "nm": "[정품] 샤넬 코코 마드모아젤 오드 빠르펭100ml", "c": "향수", "list": 146100, "fin": 96100, "rev": 3, "ord": 34, "sold": null, "sub": ""}, {"g": "목록", "rank": 5, "nm": "[정품] 샤넬 넘버5 오드퍼퓸 100ml", "c": "향수", "list": 135840, "fin": 85840, "rev": 2, "ord": 28, "sold": null, "sub": ""}, {"g": "목록", "rank": 6, "nm": "[정품] 샤넬 샹스 오 땅드르 오 드 퍼퓸 EDP 오드 뚜왈렛 EDT 100ml", "c": "향수", "list": 136500, "fin": 86500, "rev": 12, "ord": 30, "sold": null, "sub": ""}, {"g": "목록", "rank": 7, "nm": "[1+1] 오드 퍼퓸 아르간 헤어오일 100ml(로즈/화이트머스크)", "c": "헤어", "list": 40000, "fin": 12900, "rev": 105, "ord": 28, "sold": null, "sub": "에센스·오일·앰플"}, {"g": "목록", "rank": 8, "nm": "보니타 가든 핸드크림 6종세트/5+1덤/보습크림/보습선물", "c": "핸드", "list": 27000, "fin": 9900, "rev": 5058, "ord": 36, "sold": null, "sub": ""}, {"g": "목록", "rank": 9, "nm": "에트투스 아르간/바오밥 트리트먼트 1000ml/헤어팩/손상모발 케어", "c": "헤어", "list": 30000, "fin": 11900, "rev": 8939, "ord": 24, "sold": null, "sub": "트리트먼트·헤어팩"}, {"g": "목록", "rank": 10, "nm": "[브라이언's pick] 랩신 데오리셋 체취제거 바디워시 500ml (+200ml 추가증정)", "c": "바디", "list": 25900, "fin": 12900, "rev": 637, "ord": 40, "sold": null, "sub": ""}, {"g": "목록", "rank": 11, "nm": "임박,파손향수 클리어런스 세일! [무료배송] / 겐조 롤리타렘피카 끌로에 바이레도 특가 향수*", "c": "향수", "list": 197000, "fin": 5900, "rev": 216, "ord": 40, "sold": null, "sub": ""}, {"g": "목록", "rank": 12, "nm": "[1+1] 리피트인 향좋은 바디워시 1L/샴푸/폼클렌징/핸드워시/변기세정제/세탁세제 모음전 대용량 약산성 (행사용)", "c": "헤어·바디 혼합", "list": 12900, "fin": 8900, "rev": 187, "ord": 45, "sold": null, "sub": "헤어·바디 모음"}, {"g": "목록", "rank": 13, "nm": "[쟁이기] 려 루트젠 볼륨탈모 증상케어 기획 (샴푸 515ml 2개+리필 400ml 2개) (+샴.트 200ml+커피 증정)", "c": "헤어", "list": 91600, "fin": 49290, "rev": 33, "ord": 19, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 14, "nm": "[가을특가] 100%정품 향수&화장품 선물 특가(택1) / 끌로에 ck  랑방 필로소피 버버리 에르메스 돌체 메종 다비도프 *", "c": "향수", "list": 189000, "fin": 25900, "rev": 512, "ord": 19, "sold": null, "sub": ""}, {"g": "목록", "rank": 15, "nm": "바디브 대용량 1000ml 샴푸 트리트먼트 바디워시 외 헤어바디 전품목", "c": "헤어·바디 혼합", "list": 22900, "fin": 15900, "rev": 1098, "ord": 35, "sold": null, "sub": "헤어·바디 모음"}, {"g": "목록", "rank": 16, "nm": "[히말라야] 끈적임 없는 대용량 온가족 허브 바디로션 400ml+한정 사은품 증정", "c": "바디", "list": 18000, "fin": 11900, "rev": 1659, "ord": 21, "sold": null, "sub": ""}, {"g": "목록", "rank": 17, "nm": "[8900원 친구딜-인당 3개 구매제한]업바디부스팅크림250ml.바디크림.부스팅크림", "c": "바디", "list": 46000, "fin": 8900, "rev": 17, "ord": 27, "sold": null, "sub": ""}, {"g": "목록", "rank": 18, "nm": "일리윤 세라마이드 아토 로션 대용량 기획[564ml+350ml](+로션 10ml 증정)", "c": "바디", "list": 43100, "fin": 25390, "rev": 2842, "ord": 13, "sold": null, "sub": ""}, {"g": "목록", "rank": 19, "nm": "[트리플기획] 려 루트젠 탈모전문케어 두피에센스 3입 (80ml*3EA)(+샴푸 100ml+뿌리 볼륨 헤어 클립+커피 증정)", "c": "헤어", "list": 59700, "fin": 33950, "rev": 12, "ord": 15, "sold": null, "sub": "에센스·오일·앰플"}, {"g": "목록", "rank": 20, "nm": "[카카오 단독 특가] 1+1 살림백서 오브제 퍼퓸 샴푸 1L/바디워시/탈모샴푸/바디로션/트리트먼트 모음전 대용량 약산성", "c": "헤어·바디 혼합", "list": 40000, "fin": 17900, "rev": 863, "ord": 16, "sold": null, "sub": "헤어·바디 모음"}, {"g": "목록", "rank": 21, "nm": "(1+1+1)보니타 가든 바디워시/바디로션/클렌저 500ml 특가 모음", "c": "바디", "list": 45000, "fin": 15900, "rev": 487, "ord": 14, "sold": null, "sub": ""}, {"g": "목록", "rank": 22, "nm": "[쟁이기] 일리윤 울트라 리페어 로션 대용량 쟁이기 기획 [528ml x3 + 350ml](+장벽로션 50ml+커피 증정)", "c": "바디", "list": 92600, "fin": 50600, "rev": 419, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 23, "nm": "에트투스 아로마 그린 탈모샴푸 500ml 1+1/카카오특가", "c": "헤어", "list": 50000, "fin": 13900, "rev": 4312, "ord": 13, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 24, "nm": "엘라스틴 프로틴클리닉 고영양 샴푸 1000ml 2개 외", "c": "헤어", "list": 21400, "fin": 15900, "rev": 1901, "ord": 12, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 25, "nm": "에트투스 아르간 샴푸/바디워시/바디로션 1000ml (1+1)/총2000ml", "c": "헤어·바디 혼합", "list": 46000, "fin": 15900, "rev": 1098, "ord": 13, "sold": null, "sub": "헤어·바디 모음"}, {"g": "목록", "rank": 26, "nm": "알로에베라 수딩젤 98% 300mlx5개/피부진정/수분공급", "c": "바디", "list": 32000, "fin": 10900, "rev": 2237, "ord": 10, "sold": null, "sub": ""}, {"g": "목록", "rank": 27, "nm": "백화점 여자남자향수 특가 모음전 랑방 버버리 ck 존바바토스 몽블랑 지미추 페라리 클린 외", "c": "향수", "list": 51000, "fin": 45400, "rev": 232, "ord": 12, "sold": null, "sub": ""}, {"g": "목록", "rank": 28, "nm": "[정품] 샤넬 블루 드 샤넬 오드퍼퓸 EDP 남자향수 50ml", "c": "향수", "list": 135100, "fin": 85100, "rev": 1, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 29, "nm": "[정품] 딥티크 도손 오 드 뚜왈렛 100ml", "c": "향수", "list": 138000, "fin": 88000, "rev": 1, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 30, "nm": "대용량 엠보싱 화장솜 300매x3박스(총900매)/순면 100%", "c": "기타", "list": 30000, "fin": 11900, "rev": 3981, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 31, "nm": "[닥터방기원] 랩 탈모샴푸 1L 2개+랩 트리트먼트1L+여행용 샤쉐 5매 BEST 탈모케어 세트 모음전", "c": "헤어", "list": 66000, "fin": 26500, "rev": 1299, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 32, "nm": "[쟁이기] 일리윤 레드이치 케어크림 대용량 쟁이기 기획 [330ml x3](+로션 50ml+커피 증정)", "c": "바디", "list": 78000, "fin": 49850, "rev": 268, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 33, "nm": "1+1 메르헨트 바세린 바디로션 1000ml 대용량 향좋은 고보습 향오래가는", "c": "바디", "list": 25000, "fin": 15900, "rev": 266, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 34, "nm": "바오밥 트리트먼트 헤어팩 1+1/샴푸/린스/손상모발", "c": "헤어", "list": 60000, "fin": 17900, "rev": 114, "ord": 0, "sold": null, "sub": "트리트먼트·헤어팩"}, {"g": "목록", "rank": 35, "nm": "[정품] 딥티크 탐다오 오드 퍼퓸 EDP 75ml", "c": "향수", "list": 137540, "fin": 87540, "rev": 1, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 36, "nm": "[정품] 미스디올 블루밍 부케  오 드 뚜왈렛 EDT 100ml", "c": "향수", "list": 148450, "fin": 98450, "rev": 1, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 37, "nm": "온더바디 퓨어더마 바디로션 1000ml 2개(베이비파우더,그린허브,무향 중 택1)", "c": "바디", "list": 49100, "fin": 21300, "rev": 372, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 38, "nm": "[히말라야] 끈적임 없는 발각질 제거 풋크림 75g&유리풋파일", "c": "바디", "list": 15000, "fin": 11500, "rev": 235, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 39, "nm": "[가을추천] 이가격에 정품 향수 무료배송 / 베르사체 모스키노 모노템 트루사르디 필로소피 특가*", "c": "향수", "list": 238000, "fin": 9900, "rev": 232, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 40, "nm": "1+1 살림백서 대용량 바디로션 라이스&허브 1000ml 향좋은 퍼퓸 고보습 촉촉한", "c": "바디", "list": 20000, "fin": 12900, "rev": 121, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 41, "nm": "[리빙미] 사우나모자 두피 보호  찜질 헤어캡 샤워캡 온천", "c": "기타", "list": 39800, "fin": 29800, "rev": 0, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 42, "nm": "[스팀베이스] 터메릭 안티 헤어 로스 앰플 15ml", "c": "헤어", "list": 38000, "fin": 10000, "rev": 0, "ord": 0, "sold": null, "sub": "에센스·오일·앰플"}, {"g": "목록", "rank": 43, "nm": "에트투스 아르간 헤어팩+바오밥 헤어팩 (총2000ml)", "c": "헤어", "list": 60000, "fin": 18900, "rev": 1049, "ord": 0, "sold": null, "sub": "트리트먼트·헤어팩"}, {"g": "목록", "rank": 44, "nm": "일리윤 세라마이드 아토 집중크림 더블 기획 [230ml x2](+로션 10ml 증정)", "c": "바디", "list": 43800, "fin": 25020, "rev": 278, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 45, "nm": "[15+15]한달동안 걱정없어요 파스텔 에어쿠션 메이크업 퍼프", "c": "기타", "list": 13900, "fin": 8800, "rev": 219, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 46, "nm": "려 루트젠 볼륨탈모 증상케어 샴푸 리필기획 (515ml + 리필 400ml)(+샴푸 100ml+커피 증정)", "c": "헤어", "list": 40800, "fin": 28830, "rev": 154, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 47, "nm": "[바디로션 트리플] 아토베리어365 바디로션 400ml 3개", "c": "바디", "list": 99000, "fin": 65560, "rev": 130, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 48, "nm": "일리윤 프레쉬모이스춰 비타민 C 바디워시 리필기획 [500ml + 리필 500ml](+로션 10ml 증정)", "c": "바디", "list": 23800, "fin": 13200, "rev": 89, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 49, "nm": "[쟁이기] 일리윤 세라마이드 아토 집중크림 쟁이기 세트 [500ml x2](+로션 50ml+커피 증정)", "c": "바디", "list": 67000, "fin": 48270, "rev": 62, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 50, "nm": "1+1 [피부각질 40%개선]아우페 아로마 모이스처 대용량 바디워시 1,000ml 풍성한 거품 향기좋은 퍼퓸 저자극 바디클렌져", "c": "바디", "list": 30000, "fin": 14900, "rev": 21, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 51, "nm": "[더마비] 데일리 바디로션/바디크림/바디오일 저자극 고보습", "c": "바디", "list": 40000, "fin": 6900, "rev": 9, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 52, "nm": "1+1 센티베르 퍼퓸 대용량 핸드워시 500ml 향기좋은 손세정제 물비누 핸드솝 거품비누 포밍", "c": "핸드", "list": 20000, "fin": 8900, "rev": 4, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 53, "nm": "[정품] 딥티크 오르페옹 오 드 퍼퓸 EDP 75ml", "c": "향수", "list": 138540, "fin": 88540, "rev": 1, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 54, "nm": "[입소문템]1+1향기 루틴 로에랑스 명품향수 대용량 퍼퓸 바디미스트  250ml", "c": "바디", "list": 37800, "fin": 14900, "rev": 1464, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 55, "nm": "[저자극 테스트 완료] 1+1 메르헨트 맥주효모 탈모샴푸 1L 대용량 약산성 바이오틴 정수리냄새 지성 건성 두피 케어", "c": "헤어", "list": 40000, "fin": 19900, "rev": 806, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 56, "nm": "(5+1덤)델리카 핸드크림 5종세트/손보습/보습크립/보습선물", "c": "핸드", "list": 25000, "fin": 7900, "rev": 513, "ord": 12, "sold": null, "sub": ""}, {"g": "목록", "rank": 57, "nm": "[닥터포헤어] 추석맞이 대특가! 풍성한 사은품 증정", "c": "헤어", "list": 138000, "fin": 54780, "rev": 218, "ord": 0, "sold": null, "sub": "기타 헤어"}, {"g": "목록", "rank": 58, "nm": "퓨어 페미닌 워시 약산성 여성 청결제+시크릿 이너 퍼퓸/단독특가", "c": "바디", "list": 30000, "fin": 11900, "rev": 171, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 59, "nm": "[모발 빠짐 81% 개선] 1+1 살림백서 흑곡 지성 두피 탈모샴푸 1L 대용량 약산성 헤어라인 치밀도 개선", "c": "헤어", "list": 40000, "fin": 23900, "rev": 103, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 60, "nm": "블리스가든 핸드크림 5종 세트+쇼핑백/5+1덤/보습크림", "c": "핸드", "list": 25000, "fin": 8900, "rev": 100, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 61, "nm": "[제이숲]실크케라틴 단백질 2X 샴푸 기획세트(500ml+100ml)", "c": "헤어", "list": 32900, "fin": 9900, "rev": 54, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 62, "nm": "[단독특가] 제이숲 한가위 맞이 오리지널 BEST 헤어케어 모음전 / 1+1 / ~64% OFF", "c": "헤어", "list": 52200, "fin": 23160, "rev": 44, "ord": 0, "sold": null, "sub": "기타 헤어"}, {"g": "목록", "rank": 63, "nm": "[쟁이기] 일리윤 아토 집중크림 4X 대용량팩 [230ml x4] (+로션 50ml+커피 증정)", "c": "바디", "list": 87600, "fin": 50220, "rev": 40, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 64, "nm": "[대용량 5종세트] 오드 퍼퓸 핸드크림 100ml(총500ml)", "c": "핸드", "list": 35000, "fin": 8900, "rev": 39, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 65, "nm": "[제이숲]실크케라틴 단백질 2X 트리트먼트 기획세트(500ml+100ml)", "c": "헤어", "list": 32900, "fin": 9900, "rev": 28, "ord": 0, "sold": null, "sub": "트리트먼트·헤어팩"}, {"g": "목록", "rank": 66, "nm": "[더블기획] 남성맞춤 볼륨 탈모 증상케어 샴푸 2입기획 (515ml 2입)(+샴.트 200ml+커피 증정)", "c": "헤어", "list": 45800, "fin": 29760, "rev": 28, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 67, "nm": "존바바토스 아티산 EDT 포 맨 125ml", "c": "향수", "list": 60000, "fin": 48900, "rev": 22, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 68, "nm": "1+1 메르헨트 볼륨업 리페어 컬크림 150ml 컬에센스 컬링 에센스 볼륨 컬업 웨이브 파마 스타일링", "c": "헤어", "list": 30000, "fin": 9900, "rev": 21, "ord": 0, "sold": null, "sub": "에센스·오일·앰플"}, {"g": "목록", "rank": 69, "nm": "1+1[모발윤기 38%개선] 아우페 단백질 트리트먼트 1,000ml 대용량 헤어팩 모발 윤기개선 손상모케어 퍼퓸 린스 컨디셔너", "c": "헤어", "list": 30000, "fin": 14900, "rev": 16, "ord": 0, "sold": null, "sub": "트리트먼트·헤어팩"}, {"g": "목록", "rank": 70, "nm": "존슨즈베이비 레귤러 오일 125ml x 2개", "c": "바디", "list": 11000, "fin": 8800, "rev": 7, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 71, "nm": "[정품] 디올 쟈도르 오드 퍼퓸 EDP 100ml", "c": "향수", "list": 139600, "fin": 89600, "rev": 2, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 72, "nm": "(5+1)니치아 핸드크림 5종세트+쇼핑백/보습크림/생일선물/답례품", "c": "핸드", "list": 27000, "fin": 8700, "rev": 831, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 73, "nm": "더 시크릿 가든 5종 핸드크림세트/5+1덤/+쇼핑백", "c": "핸드", "list": 25000, "fin": 8500, "rev": 583, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 74, "nm": "릴리이브 그로우턴 엑소좀 3D 볼륨 샴푸 & 브러쉬 탈모 앰플 & 트리트먼트 여성 남성 두피 탈모 완화", "c": "헤어", "list": 32000, "fin": 18900, "rev": 268, "ord": 0, "sold": null, "sub": "에센스·오일·앰플"}, {"g": "목록", "rank": 75, "nm": "1+1 메르헨트 퍼퓸 대용량 바디워시 1L 약산성 향기좋은 바디클렌져 바디샤워", "c": "바디", "list": 30000, "fin": 14900, "rev": 134, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 76, "nm": "[메인] 일리윤 울트라 리페어 로션 베이직 세트 [350ml + 528ml](+로션 10ml 증정)", "c": "바디", "list": 42800, "fin": 23630, "rev": 109, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 77, "nm": "백화점 남자향수 특가할인 존바바토스 CK 버버리 몽블랑 페라리 불가리 겐조 다비도프 외", "c": "향수", "list": 60000, "fin": 53500, "rev": 104, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 78, "nm": "[행운샴푸] 강력한 두피진정을 위한 개운죽 샴푸", "c": "헤어", "list": 29800, "fin": 13900, "rev": 91, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 79, "nm": "체험특가! 30s 거품형 핸드워시 ~ 본품 500ml 리필1000 ml 사과향 무향 파우더향", "c": "핸드", "list": 7900, "fin": 3900, "rev": 53, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 80, "nm": "[대용량][붉은 선 완화 기능성] 일리윤 튼살크림 330ml(+로션 10ml 증정)", "c": "바디", "list": 40000, "fin": 25110, "rev": 53, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 81, "nm": "[플루] 아로마 퍼퓸 바디워시 1000ml (3종 택1)", "c": "바디", "list": 17900, "fin": 14900, "rev": 28, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 82, "nm": "[1+1] 트리헛 시어 슈가 바디스크럽 510g + 510g (19종 택2)", "c": "바디", "list": 45000, "fin": 32830, "rev": 27, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 83, "nm": "1+1 [두피 피지 74% 개선] 헤디안 단백질 샴푸 1L 대용량 프로틴 데일리 모이스처  저자극 두피보습 피지개선 단백질케어", "c": "헤어", "list": 30000, "fin": 14900, "rev": 20, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 84, "nm": "불가리 옴니아 아메시스트 EDT 100ml 리뉴얼", "c": "향수", "list": 190000, "fin": 139900, "rev": 19, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 85, "nm": "일리윤 시카 클리어 바디미스트/워시 모음(옵션)(+트러블 미스트 30ml 증정)", "c": "바디", "list": 43000, "fin": 27250, "rev": 18, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 86, "nm": "[쟁이기] 일리윤 세라마이드 아토 로션&집중크림 대용량 [로션 564ml x2+크림 230ml x3](+키트+커피 증정)", "c": "바디", "list": 118100, "fin": 65230, "rev": 18, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 87, "nm": "실크테라피 오리지널 에센스 130ml+60ml+모이스쳐 에센스 15ml+퍼플 브러쉬+쇼핑백 증정", "c": "헤어", "list": 66200, "fin": 30600, "rev": 17, "ord": 0, "sold": null, "sub": "에센스·오일·앰플"}, {"g": "목록", "rank": 88, "nm": "[댕기머리] 두피관리 윤초 샴푸 400ml +400ml (2병) 외~", "c": "헤어", "list": 39000, "fin": 17900, "rev": 15, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 89, "nm": "실크테라피 히트인핸서 샴푸 500ml 2개+퍼플 브러쉬+쇼핑백 증정", "c": "헤어", "list": 57800, "fin": 30510, "rev": 10, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 90, "nm": "랑방 잔느 오드퍼퓸 EDP 100ml", "c": "향수", "list": 96000, "fin": 56900, "rev": 8, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 91, "nm": "[대용량] 일리윤 프레쉬모이스처 비타민 스크럽 바디워시 기획 [625ml x3](+로션 50ml 증정)", "c": "바디", "list": 59700, "fin": 34510, "rev": 6, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 92, "nm": "더바디샵 바디 버터 200ML (옵션 택1)", "c": "바디", "list": 35000, "fin": 26040, "rev": 6, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 93, "nm": "아이깨끗해 랩신 말랑카우 버블폼 핸드워시 손세정제 리필 기획전", "c": "핸드", "list": 3100, "fin": 1600, "rev": 5, "ord": 20, "sold": null, "sub": ""}, {"g": "목록", "rank": 94, "nm": "버버리 런던 클래식 우먼 EDP 100ml", "c": "향수", "list": 90000, "fin": 51900, "rev": 3, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 95, "nm": "[정품] 딥티크 플레르 드 뽀 오 드 뚜왈렛 EDT100ml 오 드 퍼퓸 EDP 75ml", "c": "향수", "list": 137100, "fin": 87100, "rev": 3, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 96, "nm": "[정품] 샤넬 블루 드 샤넬 빠르펭 남자향수100ml", "c": "향수", "list": 136540, "fin": 86540, "rev": 2, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 97, "nm": "오피너스붐 국산 프리미엄 네일스티커 가을 웨딩 클래식 골드 디자인 예쁜 셀프네일 붙이는 네일스티커 1장", "c": "기타", "list": 4500, "fin": 3500, "rev": 1, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 98, "nm": "휴족시간 쿨링시트 6매입 3개", "c": "기타", "list": 13900, "fin": 9900, "rev": 1, "ord": 0, "sold": null, "sub": ""}, {"g": "목록", "rank": 99, "nm": "[모발빠짐 72%개선] 아우페 블랙빈 지성 두피케어 약산성 탈모증상완화 대용량 샴푸 1,000ml 탈모케어 탈모샴푸", "c": "헤어", "list": 18000, "fin": 10900, "rev": 1, "ord": 0, "sold": null, "sub": "샴푸"}, {"g": "목록", "rank": 100, "nm": "[정품] 딥티크 오 로즈 오드 퍼퓸EDP 75ml 오드뚜왈렛EDT 100ml", "c": "향수", "list": 135400, "fin": 85400, "rev": 0, "ord": 0, "sold": null, "sub": ""}];
+const W=n=>n==null?'—':n.toLocaleString('ko-KR');
+const P=n=>(n*100).toFixed(0)+'%';
+const hero=D.filter(d=>d.g==='대표'), list=D.filter(d=>d.g==='목록');
+const listOrd=list.reduce((s,d)=>s+d.ord,0);
+const short={'실크테라피':'실크테라피 에센스 기획','일리윤':'일리윤 아토로션','려 루트젠':'려 루트젠 샴푸 기획',
+ '헤드앤숄더':'헤드앤숄더 샴푸 3개','이븐로엘':'이븐로엘 헤어에센스','플루':'플루 바디스크럽 1+1'};
+const sn=n=>{for(const k in short) if(n.startsWith(k)) return short[k]; return n.slice(0,18)};
+const rows=[...hero].sort((a,b)=>b.ord-a.ord).map(d=>({l:sn(d.nm),s:d.c,v:d.ord,c:d.c==='헤어'?'var(--teal)':'var(--line)'}));
+rows.push({l:'목록 100개 전체 합계',s:'주문 수 표시 28개',v:listOrd,c:'var(--rose)',sum:1});
+const mx=Math.max(...rows.map(r=>r.v));
+document.getElementById('ord').innerHTML=rows.map(r=>`<div class="obar${r.sum?' sum':''}">
+ <div class="on">${r.l}<small>${r.s}</small></div>
+ <div class="ot"><div class="of" style="width:${Math.max(1.5,r.v/mx*100)}%;background:${r.c}"></div></div>
+ <div class="ov">${W(r.v)}</div></div>`).join('');
+
+document.getElementById('hero').innerHTML=[...hero].sort((a,b)=>b.sold-a.sold).map(d=>`<tr${d.c==='헤어'?' class="win"':''}>
+ <td>${sn(d.nm)}</td><td>${d.c}${d.sub?' · '+d.sub:''}</td><td class="r">${W(d.fin)}</td>
+ <td class="r">${P(1-d.fin/d.list)}</td><td class="r ${d.sold>10000?'g':''}">${W(d.sold)}</td><td class="r">${W(d.ord)}</td></tr>`).join('');
+
+const DRV=[['누적 리뷰','이미 검증된 상품',0.59,1],['대용량(1L)','',0.16,0],['1+1','',0.12,0],
+ ['증정','',0.02,0],['가격','',-0.01,0],['할인율','',0.01,0],['효능 수치 문구','"81% 개선" 등',-0.36,1]];
+document.getElementById('drv').innerHTML=DRV.map(([n,s,r,sig])=>{
+ const w=Math.abs(r)/0.7*50,pos=r>=0,col=sig?(pos?'var(--teal)':'var(--rose)'):'var(--mute)';
+ return `<div class="drow"><div class="dname">${n}${s?`<em>${s}</em>`:''}</div>
+ <div class="dtrack"><div class="dzero"></div><div class="dfill" style="${pos?`left:50%;width:${w}%`:`right:50%;width:${w}%`};background:${col};opacity:${sig?1:.45}"></div></div>
+ <div class="dval">${sig?(pos?'순위 올림':'순위 내림'):'<span style="color:var(--mute)">관계 없음</span>'}</div></div>`}).join('');
+
+let sk='rank',sd=1;
+document.querySelectorAll('#raw th').forEach(th=>th.addEventListener('click',()=>{
+ const k=th.dataset.k;if(sk===k)sd=-sd;else{sk=k;sd=['rank','nm','c'].includes(k)?1:-1}raw()}));
+function raw(){
+ const v=x=>x==null?-1:x;
+ const r=[...D].sort((a,b)=>{const x=a[sk],y=b[sk];
+  return (typeof x==='string'?x.localeCompare(y,'ko'):v(x)-v(y))*sd});
+ document.querySelectorAll('#raw th').forEach(th=>{
+  th.className=['list','fin','rev','ord','sold'].includes(th.dataset.k)?'r':'';
+  if(th.dataset.k===sk)th.classList.add(sd>0?'up':'dn')});
+ document.querySelector('#raw tbody').innerHTML=r.map(d=>`<tr${d.c==='헤어'||d.c==='헤어·바디 혼합'?' class="win"':''}>
+  <td>${d.g==='대표'?'대표':d.rank}</td><td><span class="pn" style="text-decoration:none">${d.nm}</span></td>
+  <td>${d.c}${d.sub?'<div class="bd">'+d.sub+'</div>':''}</td>
+  <td class="r">${W(d.list)}</td><td class="r">${W(d.fin)}</td><td class="r">${W(d.rev)}</td>
+  <td class="r">${d.ord?W(d.ord):'—'}</td><td class="r">${W(d.sold)}</td></tr>`).join('');
+}
+raw();
+</script>
+</body>
+</html>
